@@ -1,0 +1,33 @@
+from app.models import Student
+from app.extensions import db
+
+
+class StudentModule:
+    @staticmethod
+    def create_student(name, email, phone, dob, gender, address, admission_year):
+        """Creates a new student"""
+        new_student = Student(name=name, email=email, phone=phone, dob=dob, gender=gender,
+                              address=address, admission_year=admission_year)
+        db.session.add(new_student)
+        db.session.commit()
+        return new_student
+
+    @staticmethod
+    def get_all_students():
+        """Returns all students"""
+        return Student.query.all()
+
+    @staticmethod
+    def get_student_by_id(student_id):
+        """Fetch student by ID"""
+        return Student.query.get(student_id)
+
+    @staticmethod
+    def delete_student(student_id):
+        """Delete a student"""
+        student = Student.query.get(student_id)
+        if student:
+            db.session.delete(student)
+            db.session.commit()
+            return True
+        return False
