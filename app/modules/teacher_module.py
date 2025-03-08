@@ -1,6 +1,7 @@
 from app.models import Teacher
 from app.extensions import db
 
+
 class TeacherModule:
     @staticmethod
     def create_teacher(name, email, phone, password, subject_id):
@@ -35,3 +36,17 @@ class TeacherModule:
             db.session.commit()
             return True
         return False
+
+    @staticmethod
+    def update_teacher(teacher_id, **kwargs):
+        """Updates teacher details or resets password"""
+        teacher = Teacher.query.get(teacher_id)
+        if not teacher:
+            return None
+        for key, value in kwargs.items():
+            if key == "password":
+                teacher.set_password(value)
+            elif hasattr(teacher, key):
+                setattr(teacher, key, value)
+        db.session.commit()
+        return teacher

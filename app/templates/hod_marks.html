@@ -1,5 +1,3 @@
-
-{# hod_marks.html - View all marks #}
 {% extends "base_hod.html" %}
 {% block content %}
 <div class="card shadow mb-4">
@@ -23,7 +21,6 @@
                     <th>Practical</th>
                     <th>Theory</th>
                     <th>Total</th>
-                    <th>Teacher</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -74,7 +71,7 @@
             const tableBody = document.querySelector('#allMarksTable tbody');
             tableBody.innerHTML = '';
 
-            if (marks.length === 0) {
+            if (!marks || marks.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No marks found</td></tr>';
                 return;
             }
@@ -88,7 +85,6 @@
                     <td>${mark.d2_practical}</td>
                     <td>${mark.d3_theory}</td>
                     <td>${mark.total_marks}</td>
-                    <td>${mark.teacher.name}</td>
                 `;
                 tableBody.appendChild(row);
             });

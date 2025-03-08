@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from app.config import Config
 from app.extensions import db, bcrypt
+from flask_migrate import Migrate
 
 
 def create_app():
@@ -13,6 +14,7 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     bcrypt.init_app(app)
+    migrate = Migrate(app, db)  #  db migration assistant
 
     with app.app_context():
         # Import models before creating tables

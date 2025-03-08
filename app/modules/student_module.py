@@ -31,3 +31,15 @@ class StudentModule:
             db.session.commit()
             return True
         return False
+
+    @staticmethod
+    def update_student(student_id, **kwargs):
+        """Updates student details"""
+        student = Student.query.get(student_id)
+        if not student:
+            return None
+        for key, value in kwargs.items():
+            if hasattr(student, key):
+                setattr(student, key, value)
+        db.session.commit()
+        return student

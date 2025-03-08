@@ -4,6 +4,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Float
 from flask_bcrypt import Bcrypt
 from app.extensions import db, bcrypt
 
+
 # ---------------------------- MODULE 1: HOD ----------------------------
 class HOD(db.Model):
     """HOD (Head of Department) manages everything"""
@@ -21,6 +22,7 @@ class HOD(db.Model):
     def check_password(self, password):
         """Verifies the entered password"""
         return bcrypt.check_password_hash(self.password_hash, password)
+
 
 # ---------------------------- MODULE 2: TEACHERS ----------------------------
 class Teacher(db.Model):
@@ -52,6 +54,7 @@ class Teacher(db.Model):
             "phone": self.phone,
             "subject": self.subject.serialize() if self.subject else None  # Include subject details
         }
+
 
 # ---------------------------- MODULE 3: SUBJECTS ----------------------------
 class Subject(db.Model):
@@ -94,6 +97,7 @@ class Student(db.Model):
             "admission_year": self.admission_year
         }
 
+
 # ---------------------------- MODULE 5: MARKS SYSTEM ----------------------------
 class Marks(db.Model):
     """Stores marks for students in subjects assigned to teachers"""
@@ -101,7 +105,6 @@ class Marks(db.Model):
     marks_id = Column(Integer, primary_key=True)
     student_id = Column(Integer, ForeignKey("students.student_id"), nullable=False)
     subject_id = Column(Integer, ForeignKey("subjects.subject_id"), nullable=False)
-    teacher_id = Column(Integer, ForeignKey("teachers.teacher_id"), nullable=False)  # Teacher managing the marks
     d1_oral = Column(Float, nullable=False, default=0)  # D1 - Oral Marks
     d2_practical = Column(Float, nullable=False, default=0)  # D2 - Practical Marks
     d3_theory = Column(Float, nullable=False, default=0)  # D3 - Theory Marks
@@ -109,7 +112,6 @@ class Marks(db.Model):
 
     student = relationship("Student")
     subject = relationship("Subject")
-    teacher = relationship("Teacher")
 
     def calculate_total(self):
         """Calculates total marks"""
@@ -121,7 +123,6 @@ class Marks(db.Model):
             "marks_id": self.marks_id,
             "student": self.student.serialize() if self.student else None,  # Include student details
             "subject": self.subject.serialize() if self.subject else None,  # Include subject details
-            "teacher": self.teacher.serialize() if self.teacher else None,  # Include teacher details
             "d1_oral": self.d1_oral,
             "d2_practical": self.d2_practical,
             "d3_theory": self.d3_theory,

@@ -44,6 +44,25 @@ def list_teachers():
     return jsonify([teacher.serialize() for teacher in teachers])
 
 
+@hod_blueprint.route("/teachers/<int:teacher_id>", methods=["DELETE"])
+@login_required
+def delete_teacher(teacher_id):
+    success = TeacherModule.delete_teacher(teacher_id)
+    if success:
+        return jsonify({"success": True})
+    return jsonify({"error": "Teacher not found"}), 404
+
+
+@hod_blueprint.route("/teachers/<int:teacher_id>", methods=["PUT"])
+@login_required
+def update_teacher(teacher_id):
+    data = request.json
+    teacher = TeacherModule.update_teacher(teacher_id, **data)
+    if teacher:
+        return jsonify({"success": True, "teacher": teacher.serialize()})
+    return jsonify({"error": "Teacher not found"}), 404
+
+
 # -------------------- Manage Subjects --------------------
 @hod_blueprint.route("/subjects", methods=["POST"])
 @login_required
@@ -58,6 +77,25 @@ def create_subject():
 def list_subjects():
     subjects = SubjectModule.get_all_subjects()
     return jsonify([subject.serialize() for subject in subjects])
+
+
+@hod_blueprint.route("/subjects/<int:subject_id>", methods=["DELETE"])
+@login_required
+def delete_subject(subject_id):
+    success = SubjectModule.delete_subject(subject_id)
+    if success:
+        return jsonify({"success": True})
+    return jsonify({"error": "Subject not found"}), 404
+
+
+@hod_blueprint.route("/subjects/<int:subject_id>", methods=["PUT"])
+@login_required
+def update_subject(subject_id):
+    data = request.json
+    subject = SubjectModule.update_subject(subject_id, data["subject_name"])
+    if subject:
+        return jsonify({"success": True, "subject": subject.serialize()})
+    return jsonify({"error": "Subject not found"}), 404
 
 
 # -------------------- Manage Students --------------------
@@ -78,15 +116,44 @@ def list_students():
     return jsonify([student.serialize() for student in students])
 
 
+@hod_blueprint.route("/students/<int:student_id>", methods=["DELETE"])
+@login_required
+def delete_student(student_id):
+    success = StudentModule.delete_student(student_id)
+    if success:
+        return jsonify({"success": True})
+    return jsonify({"error": "Student not found"}), 404
+
+
 @hod_blueprint.route("/students/<int:student_id>", methods=["GET"])
 @login_required
 def get_student(student_id):
     student = StudentModule.get_student_by_id(student_id)
-    return jsonify(student.serialize()) if student else jsonify({"error": "Student not found"}), 404
+    if student:
+        return jsonify(student.serialize())
+    return jsonify({"error": "Student not found"}), 404
+
+
+@hod_blueprint.route("/students/<int:student_id>", methods=["PUT"])
+@login_required
+def update_student(student_id):
+    data = request.json
+    student = StudentModule.update_student(student_id, **data)
+    if student:
+        return jsonify({"success": True, "student": student.serialize()})
+    return jsonify({"error": "Student not found"}), 404
 
 
 @hod_blueprint.route("/students/<int:student_id>/marks", methods=["GET"])
 @login_required
 def get_student_marks(student_id):
     marks = MarksModule.get_student_marks(student_id)
+    return jsonify([mark.serialize() for mark in marks])
+
+
+# -------------------- View Marks -------------------- #
+@hod_blueprint.route("/marks", methods=["GET"])
+@login_required
+def view_marks():
+    marks = MarksModule.get_all_marks()
     return jsonify([mark.serialize() for mark in marks])

@@ -1,10 +1,9 @@
-{# hod_teachers.html - Manage teachers #}
 {% extends "base_hod.html" %}
 {% block content %}
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 font-weight-bold text-primary">Teachers</h6>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addTeacherModal">
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#teacherModal" onclick="openAddTeacherModal()">
             <i class="fas fa-plus"></i> Add Teacher
         </button>
     </div>
@@ -29,16 +28,17 @@
     </div>
 </div>
 
-<!-- Add Teacher Modal -->
-<div class="modal fade" id="addTeacherModal" tabindex="-1" aria-labelledby="addTeacherModalLabel" aria-hidden="true">
+<!-- Add/Edit Teacher Modal -->
+<div class="modal fade" id="teacherModal" tabindex="-1" aria-labelledby="teacherModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addTeacherModalLabel">Add New Teacher</h5>
+                <h5 class="modal-title" id="teacherModalLabel">Add New Teacher</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="addTeacherForm">
+                <form id="teacherForm">
+                    <input type="hidden" id="teacherId"> <!-- Stores ID for editing -->
                     <div class="mb-3">
                         <label for="teacherName" class="form-label">Name</label>
                         <input type="text" class="form-control" id="teacherName" required>
@@ -53,13 +53,11 @@
                     </div>
                     <div class="mb-3">
                         <label for="teacherPassword" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="teacherPassword" required>
+                        <input type="password" class="form-control" id="teacherPassword">
                     </div>
                     <div class="mb-3">
                         <label for="teacherSubject" class="form-label">Subject</label>
-                        <select class="form-control" id="teacherSubject" required>
-                            <!-- Subjects will be loaded here -->
-                        </select>
+                        <select class="form-control" id="teacherSubject" required></select>
                     </div>
                 </form>
             </div>
@@ -77,8 +75,8 @@
         loadTeachers();
         loadSubjectsForDropdown();
 
-        // Save teacher
-        document.getElementById('saveTeacher').addEventListener('click', addTeacher);
+        // Save or Update Teacher
+        document.getElementById('saveTeacher').addEventListener('click', saveTeacher);
     });
 
     async function loadTeachers() {
@@ -95,9 +93,9 @@
                     <td>${teacher.name}</td>
                     <td>${teacher.email}</td>
                     <td>${teacher.phone}</td>
-                    <td>${teacher.subject.subject_name}</td>
+                    <td>${teacher.subject ? teacher.subject.subject_name : 'Not Assigned'}</td>
                     <td class="text-center">
-                        <button class="btn btn-sm btn-info me-1" onclick="editTeacher(${teacher.teacher_id})">
+                        <button class="btn btn-sm btn-info me-1" onclick="editTeacher(${teacher.teacher_id}, '${teacher.name}', '${teacher.email}', '${teacher.phone}', '${teacher.subject ? teacher.subject.subject_id : ''}')">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="btn btn-sm btn-danger" onclick="deleteTeacher(${teacher.teacher_id})">
@@ -117,7 +115,7 @@
             const response = await fetch('/api/hod/subjects');
             const subjects = await response.json();
             const dropdown = document.getElementById('teacherSubject');
-            dropdown.innerHTML = '';
+            dropdown.innerHTML = '<option value="" disabled selected>Select Subject</option>';
 
             subjects.forEach(subject => {
                 const option = document.createElement('option');
@@ -130,39 +128,87 @@
         }
     }
 
-    async function addTeacher() {
+    function openAddTeacherModal() {
+        document.getElementById('teacherForm').reset();
+        document.getElementById('teacherId').value = "";
+        document.getElementById('teacherPassword').required = true;
+        document.getElementById('teacherModalLabel').textContent = "Add New Teacher";
+        new bootstrap.Modal(document.getElementById('teacherModal')).show();
+    }
+
+    function editTeacher(teacherId, name, email, phone, subjectId) {
+        document.getElementById('teacherId').value = teacherId;
+        document.getElementById('teacherName').value = name;
+        document.getElementById('teacherEmail').value = email;
+        document.getElementById('teacherPhone').value = phone;
+        document.getElementById('teacherPassword').required = false;
+        document.getElementById('teacherSubject').value = subjectId;
+        document.getElementById('teacherModalLabel').textContent = "Edit Teacher";
+        new bootstrap.Modal(document.getElementById('teacherModal')).show();
+    }
+
+    async function saveTeacher() {
+        const teacherId = document.getElementById('teacherId').value;
         const teacherData = {
             name: document.getElementById('teacherName').value,
             email: document.getElementById('teacherEmail').value,
             phone: document.getElementById('teacherPhone').value,
-            password: document.getElementById('teacherPassword').value,
             subject_id: parseInt(document.getElementById('teacherSubject').value)
         };
 
+        if (!teacherId) {
+            teacherData.password = document.getElementById('teacherPassword').value;
+        }
+
         try {
-            const response = await fetch('/api/hod/teachers', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(teacherData)
-            });
+            let response;
+            if (teacherId) {
+                response = await fetch(`/api/hod/teachers/${teacherId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(teacherData)
+                });
+            } else {
+                response = await fetch('/api/hod/teachers', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(teacherData)
+                });
+            }
 
             const result = await response.json();
 
             if (result.success) {
-                // Close modal & reset form
-                bootstrap.Modal.getInstance(document.getElementById('addTeacherModal')).hide();
-                document.getElementById('addTeacherForm').reset();
-
-                // Reload teachers list
+                bootstrap.Modal.getInstance(document.getElementById('teacherModal')).hide();
+                document.getElementById('teacherForm').reset();
                 loadTeachers();
             } else {
-                alert('Failed to add teacher: ' + (result.error || 'Unknown error'));
+                alert('Failed to save teacher: ' + (result.error || 'Unknown error'));
             }
         } catch (error) {
-            console.error('Error adding teacher:', error);
-            alert('An error occurred while adding the teacher');
+            console.error('Error saving teacher:', error);
+            alert('An error occurred while saving the teacher');
+        }
+    }
+
+    async function deleteTeacher(teacherId) {
+        if (!confirm('Are you sure you want to delete this teacher?')) return;
+
+        try {
+            const response = await fetch(`/api/hod/teachers/${teacherId}`, { method: 'DELETE' });
+
+            const result = await response.json();
+            if (result.success) {
+                loadTeachers();
+            } else {
+                alert('Failed to delete teacher.');
+            }
+        } catch (error) {
+            console.error('Error deleting teacher:', error);
         }
     }
 </script>

@@ -106,9 +106,11 @@
                         </div>
                     `;
 
-                // Redirect to HOD dashboard
+            // Redirect to HOD dashboard or specified redirect URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectUrl = urlParams.get('redirect') || '/dashboard/hod';
                 setTimeout(() => {
-                    window.location.href = '/dashboard/hod';
+                    window.location.href = redirectUrl;
                 }, 1000);
             } else {
                 // Show error message

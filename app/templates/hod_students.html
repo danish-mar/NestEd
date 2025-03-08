@@ -1,10 +1,9 @@
-{# hod_students.html - Manage students #}
 {% extends "base_hod.html" %}
 {% block content %}
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 font-weight-bold text-primary">Students</h6>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#studentModal" onclick="openAddStudentModal()">
             <i class="fas fa-plus"></i> Add Student
         </button>
     </div>
@@ -29,16 +28,17 @@
     </div>
 </div>
 
-<!-- Add Student Modal -->
-<div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true">
+<!-- Add/Edit Student Modal -->
+<div class="modal fade" id="studentModal" tabindex="-1" aria-labelledby="studentModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addStudentModalLabel">Add New Student</h5>
+                <h5 class="modal-title" id="studentModalLabel">Add New Student</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="addStudentForm">
+                <form id="studentForm">
+                    <input type="hidden" id="studentId"> <!-- Stores ID for editing -->
                     <div class="mb-3">
                         <label for="studentName" class="form-label">Name</label>
                         <input type="text" class="form-control" id="studentName" required>
@@ -100,7 +100,6 @@
                             <th>Practical</th>
                             <th>Theory</th>
                             <th>Total</th>
-                            <th>Teacher</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -127,7 +126,6 @@
 
     async function loadStudents() {
         try {
-            // Note: API for fetching all students isn't shown in your provided code, assuming it exists
             const response = await fetch('/api/hod/students');
             const students = await response.json();
             const tableBody = document.querySelector('#studentsTable tbody');
@@ -136,23 +134,23 @@
             students.forEach(student => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${student.student_id}</td>
-                    <td>${student.name}</td>
-                    <td>${student.email}</td>
-                    <td>${student.phone}</td>
-                    <td>${student.admission_year}</td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-info me-1" onclick="viewStudentMarks(${student.student_id}, '${student.name}')">
-                            <i class="fas fa-chart-bar"></i>
-                        </button>
-                        <button class="btn btn-sm btn-warning me-1" onclick="editStudent(${student.student_id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteStudent(${student.student_id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
+                <td>${student.student_id}</td>
+                <td>${student.name}</td>
+                <td>${student.email}</td>
+                <td>${student.phone}</td>
+                <td>${student.admission_year}</td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-info me-1" onclick="viewStudentMarks(${student.student_id}, '${student.name}')">
+                        <i class="fas fa-chart-bar"></i>
+                    </button>
+                    <button class="btn btn-sm btn-warning me-1" onclick="editStudent(${student.student_id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteStudent(${student.student_id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
                 tableBody.appendChild(row);
             });
         } catch (error) {
@@ -216,13 +214,12 @@
                 marks.forEach(mark => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${mark.subject.subject_name}</td>
-                        <td>${mark.d1_oral}</td>
-                        <td>${mark.d2_practical}</td>
-                        <td>${mark.d3_theory}</td>
-                        <td>${mark.total_marks}</td>
-                        <td>${mark.teacher.name}</td>
-                    `;
+                    <td>${mark.subject.subject_name}</td>
+                    <td>${mark.d1_oral}</td>
+                    <td>${mark.d2_practical}</td>
+                    <td>${mark.d3_theory}</td>
+                    <td>${mark.total_marks}</td>
+                `;
                     tableBody.appendChild(row);
                 });
             }
@@ -233,6 +230,120 @@
         } catch (error) {
             console.error('Error loading student marks:', error);
             alert('An error occurred while loading student marks');
+        }
+    }
+
+    async function editStudent(studentId) {
+        try {
+            const response = await fetch(`/api/hod/students/${studentId}`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const student = await response.json();
+
+            // Fill the form with student data
+            document.getElementById('studentName').value = student.name || '';
+            document.getElementById('studentEmail').value = student.email || '';
+            document.getElementById('studentPhone').value = student.phone || '';
+            document.getElementById('studentDob').value = student.dob || '';
+            document.getElementById('studentGender').value = student.gender || 'Male';
+            document.getElementById('studentAddress').value = student.address || '';
+            document.getElementById('studentAdmissionYear').value = student.admission_year || '';
+
+            // Change modal title and save button functionality
+            document.getElementById('studentModalLabel').textContent = 'Edit Student'; // Changed from addStudentModalLabel
+            const saveButton = document.getElementById('saveStudent');
+
+            // Remove previous event listener if any
+            const oldSaveButton = saveButton.cloneNode(true);
+            saveButton.parentNode.replaceChild(oldSaveButton, saveButton);
+
+            // Add new event listener for update
+            oldSaveButton.textContent = 'Update';
+            oldSaveButton.addEventListener('click', function() {
+                updateStudent(studentId);
+            });
+
+            // Show the modal
+            const studentModal = new bootstrap.Modal(document.getElementById('studentModal')); // Changed from addStudentModal
+            studentModal.show();
+        } catch (error) {
+            console.error('Error fetching student details:', error);
+            alert('An error occurred while loading student details: ' + error.message);
+        }
+    }
+
+    async function updateStudent(studentId) {
+        const studentData = {
+            name: document.getElementById('studentName').value,
+            email: document.getElementById('studentEmail').value,
+            phone: document.getElementById('studentPhone').value,
+            dob: document.getElementById('studentDob').value,
+            gender: document.getElementById('studentGender').value,
+            address: document.getElementById('studentAddress').value,
+            admission_year: parseInt(document.getElementById('studentAdmissionYear').value)
+        };
+
+        try {
+            const response = await fetch(`/api/hod/students/${studentId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(studentData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Close modal & reset form
+                bootstrap.Modal.getInstance(document.getElementById('studentModal')).hide(); // Changed from addStudentModal
+                document.getElementById('studentForm').reset(); // Changed from addStudentForm
+
+                // Reset modal for future use as "Add Student"
+                document.getElementById('studentModalLabel').textContent = 'Add New Student'; // Changed from addStudentModalLabel
+
+                // Reset button to original state
+                const saveButton = document.getElementById('saveStudent');
+                const oldSaveButton = saveButton.cloneNode(true);
+                saveButton.parentNode.replaceChild(oldSaveButton, saveButton);
+
+                // Add original event listener back
+                oldSaveButton.textContent = 'Save';
+                oldSaveButton.addEventListener('click', addStudent);
+
+                // Reload students list
+                loadStudents();
+            } else {
+                alert('Failed to update student: ' + (result.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error updating student:', error);
+            alert('An error occurred while updating the student');
+        }
+    }
+
+    async function deleteStudent(studentId) {
+        if (confirm('Are you sure you want to delete this student?')) {
+            try {
+                const response = await fetch(`/api/hod/students/${studentId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Reload students list
+                    loadStudents();
+                } else {
+                    alert('Failed to delete student: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error deleting student:', error);
+                alert('An error occurred while deleting the student');
+            }
         }
     }
 </script>

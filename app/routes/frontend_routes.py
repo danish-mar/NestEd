@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template
 
+from app.modules.middleware import hod_login_required
+
 frontend_blueprint = Blueprint("frontend", __name__)
 
 
@@ -21,26 +23,31 @@ def teacher_login():
 # hod related routes
 
 @frontend_blueprint.route("/dashboard/hod")
+@hod_login_required
 def hod_dashboard():
     return render_template("hod_dashboard.html")
 
 
 @frontend_blueprint.route("/dashboard/hod/manage/teacher")
+@hod_login_required
 def hod_dashboard_manage_teachers():
     return render_template("hod_teachers.html")
 
 
 @frontend_blueprint.route("/dashboard/hod/manage/subjects")
+@hod_login_required
 def hod_dashboard_manage_subjects():
     return render_template("hod_subjects.html")
 
 
 @frontend_blueprint.route("/dashboard/hod/manage/students")
+@hod_login_required
 def hod_dashboard_manage_students():
     return render_template("hod_students.html")
 
 
 @frontend_blueprint.route("/dashboard/hod/view/marks")
+@hod_login_required
 def hod_dashboard_view_marks():
     return render_template("hod_marks.html")
 

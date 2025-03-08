@@ -1,4 +1,3 @@
-{# hod_subjects.html - Manage subjects #}
 {% extends "base_hod.html" %}
 {% block content %}
 <div class="card shadow mb-4">
@@ -26,16 +25,17 @@
     </div>
 </div>
 
-<!-- Add Subject Modal -->
-<div class="modal fade" id="addSubjectModal" tabindex="-1" aria-labelledby="addSubjectModalLabel" aria-hidden="true">
+<!-- Add/Edit Subject Modal -->
+<div class="modal fade" id="subjectModal" tabindex="-1" aria-labelledby="subjectModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addSubjectModalLabel">Add New Subject</h5>
+                <h5 class="modal-title" id="subjectModalLabel">Add Subject</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="addSubjectForm">
+                <form id="subjectForm">
+                    <input type="hidden" id="subjectId"> <!-- Stores ID for editing -->
                     <div class="mb-3">
                         <label for="subjectName" class="form-label">Subject Name</label>
                         <input type="text" class="form-control" id="subjectName" required>
@@ -55,8 +55,8 @@
         setPageInfo('Manage Subjects', 'Subjects');
         loadSubjects();
 
-        // Save subject
-        document.getElementById('saveSubject').addEventListener('click', addSubject);
+        // Save or Update Subject
+        document.getElementById('saveSubject').addEventListener('click', saveSubject);
     });
 
     async function loadSubjects() {
@@ -87,35 +87,74 @@
         }
     }
 
-    async function addSubject() {
-        const subjectData = {
-            subject_name: document.getElementById('subjectName').value
-        };
+    async function saveSubject() {
+        const subjectId = document.getElementById('subjectId').value;
+        const subjectName = document.getElementById('subjectName').value;
+
+        const subjectData = { subject_name: subjectName };
 
         try {
-            const response = await fetch('/api/hod/subjects', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(subjectData)
+            let response;
+            if (subjectId) {
+                // Edit subject (PUT request)
+                response = await fetch(`/api/hod/subjects/${subjectId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(subjectData)
+                });
+            } else {
+                // Add new subject (POST request)
+                response = await fetch('/api/hod/subjects', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(subjectData)
+                });
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                bootstrap.Modal.getInstance(document.getElementById('subjectModal')).hide();
+                document.getElementById('subjectForm').reset();
+                loadSubjects();
+            } else {
+                alert('Failed to save subject: ' + (result.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error saving subject:', error);
+            alert('An error occurred while saving the subject');
+        }
+    }
+
+    function editSubject(subjectId, subjectName) {
+        document.getElementById('subjectId').value = subjectId;
+        document.getElementById('subjectName').value = subjectName;
+        document.getElementById('subjectModalLabel').textContent = 'Edit Subject';
+        new bootstrap.Modal(document.getElementById('subjectModal')).show();
+    }
+
+    async function deleteSubject(subjectId) {
+        if (!confirm('Are you sure you want to delete this subject?')) return;
+
+        try {
+            const response = await fetch(`/api/hod/subjects/${subjectId}`, {
+                method: 'DELETE'
             });
 
             const result = await response.json();
 
             if (result.success) {
-                // Close modal & reset form
-                bootstrap.Modal.getInstance(document.getElementById('addSubjectModal')).hide();
-                document.getElementById('addSubjectForm').reset();
-
-                // Reload subjects list
                 loadSubjects();
             } else {
-                alert('Failed to add subject: ' + (result.error || 'Unknown error'));
+                alert('Failed to delete subject: ' + (result.error || 'Unknown error'));
             }
         } catch (error) {
-            console.error('Error adding subject:', error);
-            alert('An error occurred while adding the subject');
+            console.error('Error deleting subject:', error);
+            alert('An error occurred while deleting the subject');
         }
     }
 </script>
