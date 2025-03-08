@@ -1,0 +1,169 @@
+{# hod_teachers.html - Manage teachers #}
+{% extends "base_hod.html" %}
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Teachers</h6>
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addTeacherModal">
+            <i class="fas fa-plus"></i> Add Teacher
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="teachersTable" width="100%" cellspacing="0">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Subject</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- Teachers will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Teacher Modal -->
+<div class="modal fade" id="addTeacherModal" tabindex="-1" aria-labelledby="addTeacherModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTeacherModalLabel">Add New Teacher</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addTeacherForm">
+                    <div class="mb-3">
+                        <label for="teacherName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="teacherName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="teacherEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="teacherEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="teacherPhone" class="form-label">Phone</label>
+                        <input type="tel" class="form-control" id="teacherPhone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="teacherPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="teacherPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="teacherSubject" class="form-label">Subject</label>
+                        <select class="form-control" id="teacherSubject" required>
+                            <!-- Subjects will be loaded here -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveTeacher">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setPageInfo('Manage Teachers', 'Teachers');
+        loadTeachers();
+        loadSubjectsForDropdown();
+
+        // Save teacher
+        document.getElementById('saveTeacher').addEventListener('click', addTeacher);
+    });
+
+    async function loadTeachers() {
+        try {
+            const response = await fetch('/api/hod/teachers');
+            const teachers = await response.json();
+            const tableBody = document.querySelector('#teachersTable tbody');
+            tableBody.innerHTML = '';
+
+            teachers.forEach(teacher => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${teacher.teacher_id}</td>
+                    <td>${teacher.name}</td>
+                    <td>${teacher.email}</td>
+                    <td>${teacher.phone}</td>
+                    <td>${teacher.subject.subject_name}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-info me-1" onclick="editTeacher(${teacher.teacher_id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteTeacher(${teacher.teacher_id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error loading teachers:', error);
+        }
+    }
+
+    async function loadSubjectsForDropdown() {
+        try {
+            const response = await fetch('/api/hod/subjects');
+            const subjects = await response.json();
+            const dropdown = document.getElementById('teacherSubject');
+            dropdown.innerHTML = '';
+
+            subjects.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject.subject_id;
+                option.textContent = subject.subject_name;
+                dropdown.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading subjects:', error);
+        }
+    }
+
+    async function addTeacher() {
+        const teacherData = {
+            name: document.getElementById('teacherName').value,
+            email: document.getElementById('teacherEmail').value,
+            phone: document.getElementById('teacherPhone').value,
+            password: document.getElementById('teacherPassword').value,
+            subject_id: parseInt(document.getElementById('teacherSubject').value)
+        };
+
+        try {
+            const response = await fetch('/api/hod/teachers', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(teacherData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Close modal & reset form
+                bootstrap.Modal.getInstance(document.getElementById('addTeacherModal')).hide();
+                document.getElementById('addTeacherForm').reset();
+
+                // Reload teachers list
+                loadTeachers();
+            } else {
+                alert('Failed to add teacher: ' + (result.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error adding teacher:', error);
+            alert('An error occurred while adding the teacher');
+        }
+    }
+</script>
+{% endblock %}

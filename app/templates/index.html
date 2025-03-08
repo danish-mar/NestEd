@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NestEd - Powered by MIT</title>
+  <!-- Tailwind CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    .hero-section {
+      background: linear-gradient(to right, #f0f9ff, #e6f7ff);
+      height: 70vh;
+      display: flex;
+      align-items: center;
+    }
+    .btn-primary {
+      background-color: #3b82f6;
+      border-color: #3b82f6;
+    }
+    .btn-primary:hover {
+      background-color: #2563eb;
+      border-color: #2563eb;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+<!-- Navbar -->
+<nav class="bg-white shadow-sm py-3">
+  <div class="container">
+    <div class="flex justify-between items-center">
+      <a href="/" class="text-2xl font-semibold text-blue-600">
+        <i class="fas fa-graduation-cap mr-2"></i>NestEd
+      </a>
+      <div>
+        <a href="/login_hod.html" class="btn btn-outline-primary me-2">
+          <i class="fas fa-user-tie me-1"></i> HOD Login
+        </a>
+        <a href="/login_teacher.html" class="btn btn-primary">
+          <i class="fas fa-chalkboard-teacher me-1"></i> Teacher Login
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">Streamline Your <span class="text-blue-600">College Management</span></h1>
+        <p class="text-lg text-gray-600 mb-5">NestEd provides a comprehensive system for managing student records, teacher assignments, and academic performance tracking.</p>
+        <div class="flex">
+          <a href="/login_hod.html" class="btn btn-primary btn-lg me-3 px-4">
+            Get Started <i class="fas fa-arrow-right ms-2"></i>
+          </a>
+          <a href="#features" class="btn btn-light btn-lg px-4">
+            Learn More <i class="fas fa-info-circle ms-2"></i>
+          </a>
+        </div>
+      </div>
+      <div class="col-md-6 text-center">
+        <img src="https://via.placeholder.com/600x400" alt="College Management" class="img-fluid rounded shadow">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-16 bg-white">
+  <div class="container">
+    <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Features</h2>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="p-5 bg-blue-50 rounded-lg text-center h-100">
+          <i class="fas fa-users text-4xl text-blue-500 mb-4"></i>
+          <h3 class="text-xl font-semibold mb-3">User Management</h3>
+          <p class="text-gray-600">Efficiently manage HODs, teachers, and students with role-based access control.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="p-5 bg-blue-50 rounded-lg text-center h-100">
+          <i class="fas fa-book-open text-4xl text-blue-500 mb-4"></i>
+          <h3 class="text-xl font-semibold mb-3">Subject Assignment</h3>
+          <p class="text-gray-600">Easily assign subjects to teachers and track academic progress.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="p-5 bg-blue-50 rounded-lg text-center h-100">
+          <i class="fas fa-chart-bar text-4xl text-blue-500 mb-4"></i>
+          <h3 class="text-xl font-semibold mb-3">Performance Tracking</h3>
+          <p class="text-gray-600">Comprehensive student marks management for oral, practical, and theory components.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-gray-800 text-white py-10">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6">
+        <h3 class="text-xl font-bold mb-4">NestEd</h3>
+        <p class="text-gray-300">Powered by MIT College</p>
+        <p class="text-gray-300 mt-2">A comprehensive college management system</p>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <h3 class="text-xl font-bold mb-4">Quick Links</h3>
+        <ul class="list-unstyled">
+          <li class="mb-2"><a href="/login_hod.html" class="text-gray-300 hover:text-white"><i class="fas fa-user-tie me-2"></i>HOD Login</a></li>
+          <li class="mb-2"><a href="/login_teacher.html" class="text-gray-300 hover:text-white"><i class="fas fa-chalkboard-teacher me-2"></i>Teacher Login</a></li>
+        </ul>
+      </div>
+    </div>
+    <hr class="my-6 border-gray-600">
+    <div class="text-center text-gray-400">
+      <p>&copy; 2025 NestEd. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

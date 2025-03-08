@@ -5,17 +5,26 @@ from app.modules.subject_module import SubjectModule
 from app.modules.student_module import StudentModule
 from app.modules.marks_module import MarksModule
 from app.modules.session_manager import SessionManager
+from app.modules.middleware import hod_login_required as login_required
 
 hod_blueprint = Blueprint("hod", __name__)
+
 
 # -------------------- HOD Authentication --------------------
 @hod_blueprint.route("/login", methods=["POST"])
 def hod_login():
     data = request.json
-    session_id = HODModule.login(data["email"], data["password"])
-    if session_id:
-        return jsonify({"success": True, "session_id": session_id})
+    email_id = data["email"]
+    password = data["password"]
+
+    hod_object = HODModule.login(email_id, password)
+    if hod_object:
+        session_id = SessionManager.create_session(hod_object.hod_id, role="hod")
+        response = jsonify({"success": True})
+        response.set_cookie("session_id", session_id, httponly=True, secure=True)
+        return response
     return jsonify({"success": False, "error": "Invalid credentials"}), 401
+
 
 # -------------------- Manage Teachers --------------------
 @hod_blueprint.route("/teachers", methods=["POST"])
@@ -27,11 +36,13 @@ def create_teacher():
     )
     return jsonify({"success": True, "teacher_id": teacher.teacher_id})
 
+
 @hod_blueprint.route("/teachers", methods=["GET"])
 @login_required
 def list_teachers():
     teachers = TeacherModule.get_all_teachers()
     return jsonify([teacher.serialize() for teacher in teachers])
+
 
 # -------------------- Manage Subjects --------------------
 @hod_blueprint.route("/subjects", methods=["POST"])
@@ -41,11 +52,13 @@ def create_subject():
     subject = SubjectModule.create_subject(data["subject_name"])
     return jsonify({"success": True, "subject_id": subject.subject_id})
 
+
 @hod_blueprint.route("/subjects", methods=["GET"])
 @login_required
 def list_subjects():
     subjects = SubjectModule.get_all_subjects()
     return jsonify([subject.serialize() for subject in subjects])
+
 
 # -------------------- Manage Students --------------------
 @hod_blueprint.route("/students", methods=["POST"])
@@ -57,11 +70,20 @@ def create_student():
     )
     return jsonify({"success": True, "student_id": student.student_id})
 
+
+@hod_blueprint.route("/students", methods=["GET"])
+@login_required
+def list_students():
+    students = StudentModule.get_all_students()
+    return jsonify([student.serialize() for student in students])
+
+
 @hod_blueprint.route("/students/<int:student_id>", methods=["GET"])
 @login_required
 def get_student(student_id):
     student = StudentModule.get_student_by_id(student_id)
     return jsonify(student.serialize()) if student else jsonify({"error": "Student not found"}), 404
+
 
 @hod_blueprint.route("/students/<int:student_id>/marks", methods=["GET"])
 @login_required

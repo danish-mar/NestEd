@@ -22,6 +22,11 @@ class TeacherModule:
         return Teacher.query.get(teacher_id)
 
     @staticmethod
+    def get_teacher_by_email(email):
+        """Fetch teacher by email"""
+        return Teacher.query.filter_by(email=email).first()
+
+    @staticmethod
     def delete_teacher(teacher_id):
         """Delete a teacher"""
         teacher = Teacher.query.get(teacher_id)

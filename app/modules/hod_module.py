@@ -30,3 +30,11 @@ class HODModule:
             db.session.commit()
             return True
         return False
+
+    @staticmethod
+    def login(email, password):
+        """Login HOD"""
+        hod = HOD.query.filter_by(email=email).first()
+        if hod and hod.check_password(password):
+            return hod
+        return None

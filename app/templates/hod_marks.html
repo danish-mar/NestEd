@@ -1,0 +1,100 @@
+
+{# hod_marks.html - View all marks #}
+{% extends "base_hod.html" %}
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Student Marks Overview</h6>
+        <div>
+            <select id="subjectFilter" class="form-select form-select-sm d-inline-block w-auto me-2">
+                <option value="">All Subjects</option>
+                <!-- Subjects will be loaded here -->
+            </select>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="allMarksTable" width="100%" cellspacing="0">
+                <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Subject</th>
+                    <th>Oral</th>
+                    <th>Practical</th>
+                    <th>Theory</th>
+                    <th>Total</th>
+                    <th>Teacher</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- Marks will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setPageInfo('View Marks', 'Marks');
+        loadSubjectsForFilter();
+        loadAllMarks();
+
+        // Subject filter change
+        document.getElementById('subjectFilter').addEventListener('change', loadAllMarks);
+    });
+
+    async function loadSubjectsForFilter() {
+        try {
+            const response = await fetch('/api/hod/subjects');
+            const subjects = await response.json();
+            const dropdown = document.getElementById('subjectFilter');
+
+            subjects.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject.subject_id;
+                option.textContent = subject.subject_name;
+                dropdown.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading subjects for filter:', error);
+        }
+    }
+
+    async function loadAllMarks() {
+        try {
+            const subjectId = document.getElementById('subjectFilter').value;
+            let url = '/api/hod/marks';
+            if (subjectId) {
+                url += `?subject_id=${subjectId}`;
+            }
+
+            const response = await fetch(url);
+            const marks = await response.json();
+            const tableBody = document.querySelector('#allMarksTable tbody');
+            tableBody.innerHTML = '';
+
+            if (marks.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No marks found</td></tr>';
+                return;
+            }
+
+            marks.forEach(mark => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${mark.student.name}</td>
+                    <td>${mark.subject.subject_name}</td>
+                    <td>${mark.d1_oral}</td>
+                    <td>${mark.d2_practical}</td>
+                    <td>${mark.d3_theory}</td>
+                    <td>${mark.total_marks}</td>
+                    <td>${mark.teacher.name}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error loading marks:', error);
+        }
+    }
+</script>
+{% endblock %}

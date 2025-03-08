@@ -1,8 +1,9 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from config import Config
+from app.config import Config
 from app.extensions import db, bcrypt
+
 
 def create_app():
     """Factory function to create and configure the Flask app"""
@@ -14,6 +15,12 @@ def create_app():
     bcrypt.init_app(app)
 
     with app.app_context():
-        db.create_all()  # Ensure all tables are created
+        # Import models before creating tables
+        from app import models  # Ensure models are registered
+        db.create_all()  # Create all tables if they don't exist
+
+        # Register blueprints
+        from app.routes import register_blueprints
+        register_blueprints(app)
 
     return app

@@ -43,12 +43,30 @@ class Teacher(db.Model):
         """Verifies the entered password"""
         return bcrypt.check_password_hash(self.password_hash, password)
 
+    def serialize(self):
+        """Convert SQLAlchemy object to a dictionary"""
+        return {
+            "teacher_id": self.teacher_id,
+            "name": self.name,
+            "email": self.email,
+            "phone": self.phone,
+            "subject": self.subject.serialize() if self.subject else None  # Include subject details
+        }
+
 # ---------------------------- MODULE 3: SUBJECTS ----------------------------
 class Subject(db.Model):
     """Subjects are assigned to teachers by the HOD"""
     __tablename__ = "subjects"
     subject_id = Column(Integer, primary_key=True)
     subject_name = Column(String(100), nullable=False)
+
+    def serialize(self):
+        """Convert SQLAlchemy object to a dictionary"""
+        return {
+            "subject_id": self.subject_id,
+            "subject_name": self.subject_name
+        }
+
 
 # ---------------------------- MODULE 4: STUDENTS ----------------------------
 class Student(db.Model):
@@ -62,6 +80,19 @@ class Student(db.Model):
     gender = Column(String(10), nullable=False)
     address = Column(String(255), nullable=False)
     admission_year = Column(Integer, nullable=False)
+
+    def serialize(self):
+        """Convert SQLAlchemy object to a dictionary"""
+        return {
+            "student_id": self.student_id,
+            "name": self.name,
+            "email": self.email,
+            "phone": self.phone,
+            "dob": self.dob,
+            "gender": self.gender,
+            "address": self.address,
+            "admission_year": self.admission_year
+        }
 
 # ---------------------------- MODULE 5: MARKS SYSTEM ----------------------------
 class Marks(db.Model):
@@ -83,3 +114,16 @@ class Marks(db.Model):
     def calculate_total(self):
         """Calculates total marks"""
         self.total_marks = self.d1_oral + self.d2_practical + self.d3_theory
+
+    def serialize(self):
+        """Convert SQLAlchemy object to a dictionary"""
+        return {
+            "marks_id": self.marks_id,
+            "student": self.student.serialize() if self.student else None,  # Include student details
+            "subject": self.subject.serialize() if self.subject else None,  # Include subject details
+            "teacher": self.teacher.serialize() if self.teacher else None,  # Include teacher details
+            "d1_oral": self.d1_oral,
+            "d2_practical": self.d2_practical,
+            "d3_theory": self.d3_theory,
+            "total_marks": self.total_marks
+        }
