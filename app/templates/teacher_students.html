@@ -1,0 +1,388 @@
+{% extends "base_teacher.html" %}
+
+{% block content %}
+<div class="bg-white p-6 rounded-lg shadow-md">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Student List</h1>
+        <div class="flex space-x-2">
+            <div class="relative">
+                <input type="text" id="search-students" placeholder="Search students..." class="border rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+            </div>
+            <!-- Added download all students report dropdown -->
+            <div class="relative inline-block">
+                <button id="download-all-reports-btn" class="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center">
+                    <i class="fa-solid fa-download mr-2"></i>Download All Reports
+                    <i class="fa-solid fa-chevron-down ml-2"></i>
+                </button>
+                <div id="download-all-reports-menu" class="absolute right-0 mt-2 bg-white shadow-lg rounded-lg py-2 hidden z-10 w-48">
+                    <a href="/api/teacher/report/students?format=excel" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">
+                        <i class="fa-solid fa-file-excel mr-2 text-green-600"></i>Excel Format
+                    </a>
+                    <a href="/api/teacher/report/students?format=pdf" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">
+                        <i class="fa-solid fa-file-pdf mr-2 text-red-600"></i>PDF Format
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white rounded-lg overflow-hidden">
+            <thead class="bg-gray-100">
+            <tr>
+                <th class="py-3 px-4 text-left">ID</th>
+                <th class="py-3 px-4 text-left">Name</th>
+                <th class="py-3 px-4 text-left">Email</th>
+                <th class="py-3 px-4 text-left">Admission Year</th>
+                <th class="py-3 px-4 text-left">Actions</th>
+            </tr>
+            </thead>
+            <tbody id="students-table-body">
+            <!-- Students will be loaded here -->
+            <tr>
+                <td colspan="5" class="py-4 text-center text-gray-500">Loading students...</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Student Details Modal -->
+    <div id="student-details-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">Student Details</h2>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="student-details-content" class="space-y-4">
+                <!-- Student details will be loaded here -->
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <!-- Added download report dropdown -->
+                <div class="relative inline-block">
+                    <button id="download-report-btn" class="bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600 flex items-center">
+                        <i class="fa-solid fa-download mr-2"></i>Download Report
+                        <i class="fa-solid fa-chevron-down ml-2"></i>
+                    </button>
+                    <div id="download-report-menu" class="absolute right-0 mt-2 bg-white shadow-lg rounded-lg py-2 hidden z-10 w-48">
+                        <a href="#" id="download-excel-btn" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">
+                            <i class="fa-solid fa-file-excel mr-2 text-green-600"></i>Excel Format
+                        </a>
+                        <a href="#" id="download-pdf-btn" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">
+                            <i class="fa-solid fa-file-pdf mr-2 text-red-600"></i>PDF Format
+                        </a>
+                    </div>
+                </div>
+                <button id="print-details" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+                    <i class="fa-solid fa-print mr-2"></i>Print Details
+                </button>
+                <button id="view-marks" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">
+                    <i class="fa-solid fa-chart-bar mr-2"></i>View Marks
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const tableBody = document.getElementById('students-table-body');
+        const modal = document.getElementById('student-details-modal');
+        const closeModal = document.getElementById('close-modal');
+        const studentDetailsContent = document.getElementById('student-details-content');
+        const printButton = document.getElementById('print-details');
+        const viewMarksButton = document.getElementById('view-marks');
+        const searchInput = document.getElementById('search-students');
+
+        // Dropdown elements
+        const downloadAllReportsBtn = document.getElementById('download-all-reports-btn');
+        const downloadAllReportsMenu = document.getElementById('download-all-reports-menu');
+        const downloadReportBtn = document.getElementById('download-report-btn');
+        const downloadReportMenu = document.getElementById('download-report-menu');
+        const downloadExcelBtn = document.getElementById('download-excel-btn');
+        const downloadPdfBtn = document.getElementById('download-pdf-btn');
+
+        let studentsData = [];
+        let currentStudentId = null;
+
+        setPageInfo('View Student Details', 'Students');
+
+        // Setup dropdown toggles
+        if (downloadAllReportsBtn && downloadAllReportsMenu) {
+            downloadAllReportsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                downloadAllReportsMenu.classList.toggle('hidden');
+            });
+        }
+
+        if (downloadReportBtn && downloadReportMenu) {
+            downloadReportBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                downloadReportMenu.classList.toggle('hidden');
+            });
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', () => {
+            if (downloadAllReportsMenu) downloadAllReportsMenu.classList.add('hidden');
+            if (downloadReportMenu) downloadReportMenu.classList.add('hidden');
+            document.querySelectorAll('.student-dropdown-menu').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+        });
+
+        // Load all students
+        const loadStudents = async () => {
+            try {
+                const response = await fetch('/api/teacher/students', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch students');
+                }
+
+                studentsData = await response.json();
+                displayStudents(studentsData);
+            } catch (error) {
+                console.error('Error loading students:', error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-4 text-center text-red-500">
+                            <i class="fa-solid fa-exclamation-circle mr-2"></i>
+                            Error loading students. Please try again.
+                        </td>
+                    </tr>
+                `;
+            }
+        };
+
+        // Display students in the table
+        const displayStudents = (students) => {
+            if (students.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-4 text-center text-gray-500">No students found</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tableBody.innerHTML = students.map(student => `
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-4 border-b">${student.student_id}</td>
+                    <td class="py-3 px-4 border-b">${student.name}</td>
+                    <td class="py-3 px-4 border-b">${student.email}</td>
+                    <td class="py-3 px-4 border-b">${student.admission_year}</td>
+                    <td class="py-3 px-4 border-b">
+                        <button class="view-details bg-blue-100 text-blue-600 py-1 px-3 rounded hover:bg-blue-200 mr-2"
+                                data-student-id="${student.student_id}">
+                            <i class="fa-solid fa-eye mr-1"></i>Details
+                        </button>
+                        <button class="assign-marks bg-green-100 text-green-600 py-1 px-3 rounded hover:bg-green-200 mr-2"
+                                data-student-id="${student.student_id}">
+                            <i class="fa-solid fa-marker mr-1"></i>Marks
+                        </button>
+                        <div class="relative inline-block">
+                            <button class="download-student-report bg-purple-100 text-purple-600 py-1 px-3 rounded hover:bg-purple-200"
+                                    data-student-id="${student.student_id}">
+                                <i class="fa-solid fa-download mr-1"></i>Report
+                            </button>
+                            <div class="student-dropdown-menu absolute hidden bg-white shadow-lg rounded-lg py-2 z-10 w-32 right-0 mt-1">
+                                <a href="/api/teacher/report/student/${student.student_id}?format=excel" class="block px-3 py-1 hover:bg-gray-100 text-gray-700 text-sm">
+                                    <i class="fa-solid fa-file-excel mr-1 text-green-600"></i>Excel
+                                </a>
+                                <a href="/api/teacher/report/student/${student.student_id}?format=pdf" class="block px-3 py-1 hover:bg-gray-100 text-gray-700 text-sm">
+                                    <i class="fa-solid fa-file-pdf mr-1 text-red-600"></i>PDF
+                                </a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Add event listeners to the buttons
+            document.querySelectorAll('.view-details').forEach(button => {
+                button.addEventListener('click', () => {
+                    const studentId = button.getAttribute('data-student-id');
+                    showStudentDetails(studentId);
+                });
+            });
+
+            document.querySelectorAll('.assign-marks').forEach(button => {
+                button.addEventListener('click', () => {
+                    const studentId = button.getAttribute('data-student-id');
+                    window.location.href = `/teacher/assign-marks?student_id=${studentId}`;
+                });
+            });
+
+            document.querySelectorAll('.download-student-report').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // Hide all other open dropdowns first
+                    document.querySelectorAll('.student-dropdown-menu').forEach(menu => {
+                        menu.classList.add('hidden');
+                    });
+                    // Show this dropdown
+                    const menu = button.nextElementSibling;
+                    menu.classList.toggle('hidden');
+                });
+            });
+        };
+
+        // Show student details in modal
+        const showStudentDetails = async (studentId) => {
+            currentStudentId = studentId;
+
+            studentDetailsContent.innerHTML = '<p class="text-center py-4">Loading student details...</p>';
+            modal.classList.remove('hidden');
+
+            try {
+                // Find student in already loaded data
+                const student = studentsData.find(s => s.student_id == studentId);
+
+                studentDetailsContent.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-gray-600">Student ID</p>
+                            <p class="font-semibold">${student.student_id}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Name</p>
+                            <p class="font-semibold">${student.name}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Email</p>
+                            <p class="font-semibold">${student.email}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Phone</p>
+                            <p class="font-semibold">${student.phone}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Gender</p>
+                            <p class="font-semibold">${student.gender}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Date of Birth</p>
+                            <p class="font-semibold">${student.dob}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Admission Year</p>
+                            <p class="font-semibold">${student.admission_year}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Address</p>
+                            <p class="font-semibold">${student.address}</p>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error displaying student details:', error);
+                studentDetailsContent.innerHTML = `
+                    <p class="text-center text-red-500">
+                        <i class="fa-solid fa-exclamation-circle mr-2"></i>
+                        Error loading student details. Please try again.
+                    </p>
+                `;
+            }
+        };
+
+        // Event listeners
+        closeModal.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        printButton.addEventListener('click', () => {
+            const printWindow = window.open('', '_blank');
+            const student = studentsData.find(s => s.student_id == currentStudentId);
+
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Student Details - ${student.name}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; }
+                        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+                        h1 { text-align: center; margin-bottom: 20px; }
+                        .detail { margin-bottom: 10px; }
+                        .label { font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>Student Details</h1>
+                        <div class="detail">
+                            <span class="label">Student ID:</span> ${student.student_id}
+                        </div>
+                        <div class="detail">
+                            <span class="label">Name:</span> ${student.name}
+                        </div>
+                        <div class="detail">
+                            <span class="label">Email:</span> ${student.email}
+                        </div>
+                        <div class="detail">
+                            <span class="label">Phone:</span> ${student.phone}
+                        </div>
+                        <div class="detail">
+                            <span class="label">Gender:</span> ${student.gender}
+                        </div>
+                        <div class="detail">
+                            <span class="label">Date of Birth:</span> ${student.dob}
+                        </div>
+                        <div class="detail">
+                            <span class="label">Admission Year:</span> ${student.admission_year}
+                        </div>
+                        <div class="detail">
+                            <span class="label">Address:</span> ${student.address}
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `);
+
+            printWindow.document.close();
+            printWindow.print();
+        });
+
+        viewMarksButton.addEventListener('click', () => {
+            window.location.href = `/teacher/student-marks?student_id=${currentStudentId}`;
+        });
+
+        // Download single student report handlers
+        if (downloadExcelBtn) {
+            downloadExcelBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = `/api/teacher/report/student/${currentStudentId}?format=excel`;
+            });
+        }
+
+        if (downloadPdfBtn) {
+            downloadPdfBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = `/api/teacher/report/student/${currentStudentId}?format=pdf`;
+            });
+        }
+
+        searchInput.addEventListener('input', () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filteredStudents = studentsData.filter(student =>
+                student.name.toLowerCase().includes(searchTerm) ||
+                student.email.toLowerCase().includes(searchTerm) ||
+                student.student_id.toString().includes(searchTerm)
+            );
+            displayStudents(filteredStudents);
+        });
+
+        // Initial load
+        loadStudents();
+    });
+</script>
+{% endblock %}

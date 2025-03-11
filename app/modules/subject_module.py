@@ -9,7 +9,7 @@ class SubjectModule:
         new_subject = Subject(subject_name=subject_name)
         db.session.add(new_subject)
         db.session.commit()
-        return new_subject @ staticmethod
+        return new_subject
 
     @staticmethod
     def get_all_subjects():

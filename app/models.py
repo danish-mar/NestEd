@@ -24,6 +24,16 @@ class HOD(db.Model):
         return bcrypt.check_password_hash(self.password_hash, password)
 
 
+    def serialize(self):
+        """Convert SQLAlchemy object to a dictionary"""
+        return {
+            "hod_id": self.hod_id,
+            "name": self.name,
+            "email": self.email,
+            "phone": self.phone
+        }
+
+
 # ---------------------------- MODULE 2: TEACHERS ----------------------------
 class Teacher(db.Model):
     """Teachers are assigned subjects by the HOD and manage marks"""

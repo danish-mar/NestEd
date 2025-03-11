@@ -81,9 +81,9 @@
     <div class="p-4 border-b border-blue-900">
         <a href="/" class="text-white text-decoration-none">
             <h3 class="font-bold">
-                <i class="fas fa-graduation-cap me-2"></i>NestEd
+                <i class="fas fa-graduation-cap me-2"></i>MIT.Edu
             </h3>
-            <p class="text-sm text-blue-200">Powered by MIT</p>
+            <p class="text-sm text-blue-200">Powered by NestEd</p>
         </a>
     </div>
 
@@ -113,7 +113,7 @@
         </a>
 
         <div class="border-t border-blue-900 mt-4 pt-4">
-            <a href="#" id="logout-btn" class="sidebar-item d-block text-decoration-none rounded">
+            <a  href="/logout" id="logout-btn" class="sidebar-item d-block text-decoration-none rounded">
                 <i class="fas fa-sign-out-alt me-2 w-6 text-center"></i> Logout
             </a>
         </div>
@@ -136,9 +136,7 @@
                     <span class="d-none d-sm-inline me-1" id="hod-name">HOD Name</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="dropdownUser">
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i> Profile</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#" id="dropdown-logout"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                    <li><a class="dropdown-item" href="/logout" id="dropdown-logout"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
                 </ul>
             </div>
         </div>
@@ -153,7 +151,7 @@
             <h1 class="h3 text-gray-800 font-semibold" id="page-title">Dashboard</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="/hod_dashboard.html" class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/dashboard/hod" class="text-decoration-none">Dashboard</a></li>
                     <li id="breadcrumb-current" class="breadcrumb-item active" aria-current="page">Overview</li>
                 </ol>
             </nav>
@@ -175,6 +173,14 @@
         // Handle sidebar toggle
         const sidebarToggle = document.getElementById('sidebar-toggle');
         const sidebar = document.getElementById('sidebar');
+
+        const hodData = JSON.parse(localStorage.getItem("hod_data"));
+
+
+        if (hodData) {
+            document.getElementById("hod-name").textContent = hodData.name;
+        }
+
 
         sidebarToggle.addEventListener('click', function() {
             sidebar.classList.toggle('active');

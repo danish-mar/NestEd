@@ -1,5 +1,8 @@
-from flask import Blueprint, request, jsonify
+import os
+
+from flask import Blueprint, request, jsonify, send_file
 from app.modules.hod_module import HODModule
+from app.modules.reporting_module import ReportingModule
 from app.modules.teacher_module import TeacherModule
 from app.modules.subject_module import SubjectModule
 from app.modules.student_module import StudentModule
@@ -20,10 +23,20 @@ def hod_login():
     hod_object = HODModule.login(email_id, password)
     if hod_object:
         session_id = SessionManager.create_session(hod_object.hod_id, role="hod")
-        response = jsonify({"success": True})
+        response = jsonify({"success": True, "hod_object": hod_object.serialize()})
         response.set_cookie("session_id", session_id, httponly=True, secure=True)
         return response
     return jsonify({"success": False, "error": "Invalid credentials"}), 401
+
+
+@hod_blueprint.route("/logout", methods=["POST"])
+@login_required
+def hod_logout():
+    session_id = request.cookies.get("session_id")
+    SessionManager.delete_session(session_id)
+    response = jsonify({"success": True})
+    response.set_cookie("session_id", "", expires=0)
+    return response
 
 
 # -------------------- Manage Teachers --------------------
@@ -157,3 +170,37 @@ def get_student_marks(student_id):
 def view_marks():
     marks = MarksModule.get_all_marks()
     return jsonify([mark.serialize() for mark in marks])
+
+
+# -------------------- Reporting Routes--------------- #
+
+@hod_blueprint.route("/report/students", methods=["GET"])
+@login_required
+def download_student_report():
+    """Download all students' details and marks report"""
+    file_format = request.args.get("format", "excel")  # Default to Excel
+    if file_format not in ["excel", "pdf"]:
+        return jsonify({"error": "Invalid format. Use 'excel' or 'pdf'."}), 400
+
+    file_path = ReportingModule.generate_student_report(file_format)
+
+    if not file_path or not os.path.exists(file_path):
+        return jsonify({"error": "Report generation failed"}), 500
+
+    return send_file(file_path, as_attachment=True)
+
+
+@hod_blueprint.route("/report/student/<int:student_id>", methods=["GET"])
+@login_required
+def download_single_student_report(student_id):
+    """Download report for a single student with all their marks"""
+    file_format = request.args.get("format", "excel")  # Default to Excel
+    if file_format not in ["excel", "pdf"]:
+        return jsonify({"error": "Invalid format. Use 'excel' or 'pdf'."}), 400
+
+    file_path = ReportingModule.generate_single_student_report(student_id, file_format)
+
+    if not file_path or not os.path.exists(file_path):
+        return jsonify({"error": "Student not found or report generation failed"}), 404
+
+    return send_file(file_path, as_attachment=True)

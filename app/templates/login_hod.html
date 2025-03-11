@@ -99,6 +99,9 @@
                 // Store session ID in cookie
                 document.cookie = `session_id=${data.session_id}; path=/`;
 
+                // Store HOD details in localStorage
+                localStorage.setItem("hod_data", JSON.stringify(data.hod_object));
+
                 // Show success message
                 alertContainer.innerHTML = `
                         <div class="alert alert-success" role="alert">

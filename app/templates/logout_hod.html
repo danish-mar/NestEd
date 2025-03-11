@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logging Out...</title>
+</head>
+<body>
+<p>Logging out, please wait...</p>
+</body>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        fetch("/api/hod/logout", { method: "POST" })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear session cookie
+                    document.cookie = "session_id=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+
+                    // Clear local storage
+                    localStorage.removeItem("hod_data");
+
+                    // Redirect to login page
+                    window.location.href = "/login/hod";
+                }
+            })
+            .catch(error => console.error("Logout failed:", error));
+    });
+
+</script>
+</html>

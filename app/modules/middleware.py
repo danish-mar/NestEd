@@ -14,8 +14,8 @@ def teacher_login_required(func):
 
         if not user_id:
             if request.method == "GET":
-                redirect_url = quote(request.full_path)
-                return redirect(url_for('login', redirect=redirect_url))
+                redirect_url = request.path
+                return redirect(url_for('frontend.teacher_login', redirect=redirect_url))
             return jsonify({"success": False, "error": "Unauthorized"}), 401
 
         return func(*args, **kwargs)

@@ -1,0 +1,557 @@
+{% extends "base_teacher.html" %}
+
+{% block content %}
+<div class="bg-white p-6 rounded-lg shadow-md">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Assign Marks</h1>
+        <a href="/teacher/students" class="bg-gray-200 text-gray-700 py-2 px-4 rounded hover:bg-gray-300">
+            <i class="fa-solid fa-arrow-left mr-2"></i>Back to Students
+        </a>
+    </div>
+
+    <div id="student-search-section" class="mb-6">
+        <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex-grow">
+                <label for="student-search" class="block text-sm font-medium text-gray-700 mb-1">Search Student</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-search text-gray-400"></i>
+                    </div>
+                    <input type="text" id="student-search" placeholder="Search by name, ID or email..."
+                           class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <div class="w-full md:w-1/3">
+                <label for="student-select" class="block text-sm font-medium text-gray-700 mb-1">Quick Select</label>
+                <select id="student-select" class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">-- Select a student --</option>
+                    <!-- Students will be loaded here -->
+                </select>
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        <div id="search-results" class="mt-4 hidden">
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Search Results</h3>
+            <div id="search-results-container" class="max-h-60 overflow-y-auto border rounded-lg">
+                <!-- Search results will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="student-info" class="p-4 bg-blue-50 rounded-lg mb-6 hidden">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <p class="text-sm text-gray-600">Student Name</p>
+                <p id="student-name" class="font-semibold"></p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Student ID</p>
+                <p id="student-id" class="font-semibold"></p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Email</p>
+                <p id="student-email" class="font-semibold"></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="marks-form" class="hidden">
+        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">Enter Marks</h2>
+                <div id="subject-info" class="bg-green-50 rounded-lg py-1 px-3">
+                    <span class="text-sm text-gray-600 mr-1">Subject:</span>
+                    <span id="teacher-subject" class="font-semibold">Loading...</span>
+                </div>
+            </div>
+
+            <form id="assign-marks-form" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label for="d1-oral" class="block text-sm font-medium text-gray-700 mb-1">D1 - Oral Marks</label>
+                        <div class="flex items-center">
+                            <input type="number" id="d1-oral" name="d1_oral" min="0" max="100" step="0.1"
+                                   class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <div class="ml-2 flex flex-col">
+                                <button type="button" class="mark-increment" data-input="d1-oral">
+                                    <i class="fa-solid fa-chevron-up text-gray-500 hover:text-blue-500"></i>
+                                </button>
+                                <button type="button" class="mark-decrement" data-input="d1-oral">
+                                    <i class="fa-solid fa-chevron-down text-gray-500 hover:text-blue-500"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="d2-practical" class="block text-sm font-medium text-gray-700 mb-1">D2 - Practical Marks</label>
+                        <div class="flex items-center">
+                            <input type="number" id="d2-practical" name="d2_practical" min="0" max="100" step="0.1"
+                                   class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <div class="ml-2 flex flex-col">
+                                <button type="button" class="mark-increment" data-input="d2-practical">
+                                    <i class="fa-solid fa-chevron-up text-gray-500 hover:text-blue-500"></i>
+                                </button>
+                                <button type="button" class="mark-decrement" data-input="d2-practical">
+                                    <i class="fa-solid fa-chevron-down text-gray-500 hover:text-blue-500"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="d3-theory" class="block text-sm font-medium text-gray-700 mb-1">D3 - Theory Marks</label>
+                        <div class="flex items-center">
+                            <input type="number" id="d3-theory" name="d3_theory" min="0" max="100" step="0.1"
+                                   class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <div class="ml-2 flex flex-col">
+                                <button type="button" class="mark-increment" data-input="d3-theory">
+                                    <i class="fa-solid fa-chevron-up text-gray-500 hover:text-blue-500"></i>
+                                </button>
+                                <button type="button" class="mark-decrement" data-input="d3-theory">
+                                    <i class="fa-solid fa-chevron-down text-gray-500 hover:text-blue-500"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Mark Buttons -->
+                <div class="pt-4 border-t">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Quick Mark Buttons</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" class="quick-mark bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200" data-value="70">70</button>
+                        <button type="button" class="quick-mark bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200" data-value="75">75</button>
+                        <button type="button" class="quick-mark bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200" data-value="80">80</button>
+                        <button type="button" class="quick-mark bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200" data-value="85">85</button>
+                        <button type="button" class="quick-mark bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200" data-value="90">90</button>
+                        <button type="button" class="quick-mark bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200" data-value="95">95</button>
+                        <button type="button" class="quick-mark bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200" data-value="100">100</button>
+                    </div>
+                </div>
+
+                <div class="border-t pt-4 mt-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-600">Total Marks</p>
+                            <p id="total-marks" class="text-xl font-bold text-blue-600">0.0</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="button" id="clear-marks" class="bg-gray-500 text-white py-2 px-6 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                                <i class="fa-solid fa-eraser mr-2"></i>Clear
+                            </button>
+                            <button type="submit" class="bg-green-500 text-white py-2 px-6 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <i class="fa-solid fa-save mr-2"></i>Save Marks
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="marks-history" class="mt-8 hidden">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Previous Marks</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white rounded-lg overflow-hidden">
+                <thead class="bg-gray-100">
+                <tr>
+                    <th class="py-3 px-4 text-left">Subject</th>
+                    <th class="py-3 px-4 text-left">D1 - Oral</th>
+                    <th class="py-3 px-4 text-left">D2 - Practical</th>
+                    <th class="py-3 px-4 text-left">D3 - Theory</th>
+                    <th class="py-3 px-4 text-left">Total</th>
+                </tr>
+                </thead>
+                <tbody id="marks-table-body">
+                <!-- Marks will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Success/Error Alert -->
+    <div id="alert-container" class="fixed bottom-4 right-4 z-50 max-w-md"></div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const studentSearch = document.getElementById('student-search');
+        const searchResults = document.getElementById('search-results');
+        const searchResultsContainer = document.getElementById('search-results-container');
+        const studentSelect = document.getElementById('student-select');
+        const studentInfo = document.getElementById('student-info');
+        const studentName = document.getElementById('student-name');
+        const studentId = document.getElementById('student-id');
+        const studentEmail = document.getElementById('student-email');
+        const marksForm = document.getElementById('marks-form');
+        const assignMarksForm = document.getElementById('assign-marks-form');
+        const d1Oral = document.getElementById('d1-oral');
+        const d2Practical = document.getElementById('d2-practical');
+        const d3Theory = document.getElementById('d3-theory');
+        const totalMarks = document.getElementById('total-marks');
+        const marksHistory = document.getElementById('marks-history');
+        const marksTableBody = document.getElementById('marks-table-body');
+        const teacherSubject = document.getElementById('teacher-subject');
+        const alertContainer = document.getElementById('alert-container');
+        const clearMarksBtn = document.getElementById('clear-marks');
+
+        let studentsData = [];
+        let currentStudentId = null;
+        let subjectInfo = null;
+        let searchTimeout = null;
+
+        // Check URL for student_id parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const preselectedStudentId = urlParams.get('student_id');
+
+        setPageInfo('Assign Marks', 'Marks');
+
+        // Load all students
+        const loadStudents = async () => {
+            try {
+                const response = await fetch('/api/teacher/students', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch students');
+                }
+
+                studentsData = await response.json();
+
+                // Populate student select dropdown
+                studentSelect.innerHTML = '<option value="">-- Select a student --</option>' +
+                    studentsData.map(student => `
+                        <option value="${student.student_id}">${student.name} (ID: ${student.student_id})</option>
+                    `).join('');
+
+                // If student_id is in URL params, select that student
+                if (preselectedStudentId) {
+                    studentSelect.value = preselectedStudentId;
+                    studentSelect.dispatchEvent(new Event('change'));
+                }
+            } catch (error) {
+                console.error('Error loading students:', error);
+                showAlert('Error loading students. Please try again.', 'error');
+            }
+        };
+
+        // Search students function
+        const searchStudents = (query) => {
+            if (!query || query.trim() === '') {
+                searchResults.classList.add('hidden');
+                return;
+            }
+
+            const searchQuery = query.toLowerCase().trim();
+            const filteredStudents = studentsData.filter(student =>
+                student.name.toLowerCase().includes(searchQuery) ||
+                student.student_id.toString().includes(searchQuery) ||
+                (student.email && student.email.toLowerCase().includes(searchQuery))
+            );
+
+            if (filteredStudents.length > 0) {
+                searchResultsContainer.innerHTML = filteredStudents.map(student => `
+                    <div class="student-result p-3 hover:bg-blue-50 cursor-pointer border-b flex justify-between items-center"
+                         data-student-id="${student.student_id}">
+                        <div>
+                            <div class="font-medium">${student.name}</div>
+                            <div class="text-sm text-gray-500">ID: ${student.student_id}</div>
+                        </div>
+                        <button class="text-blue-600 hover:text-blue-800">
+                            <i class="fa-solid fa-user-check"></i> Select
+                        </button>
+                    </div>
+                `).join('');
+
+                // Add event listeners to search results
+                document.querySelectorAll('.student-result').forEach(element => {
+                    element.addEventListener('click', () => {
+                        const clickedStudentId = element.dataset.studentId;
+                        selectStudent(clickedStudentId);
+                        searchResults.classList.add('hidden');
+                        studentSearch.value = '';
+                    });
+                });
+
+                searchResults.classList.remove('hidden');
+            } else {
+                searchResultsContainer.innerHTML = `
+                    <div class="p-3 text-gray-500 text-center">
+                        No students found matching "${query}"
+                    </div>
+                `;
+                searchResults.classList.remove('hidden');
+            }
+        };
+
+        // Select a student
+        const selectStudent = (studentId) => {
+            currentStudentId = studentId;
+            studentSelect.value = studentId;
+
+            if (currentStudentId) {
+                const student = studentsData.find(s => s.student_id == currentStudentId);
+
+                // Update student info display
+                studentName.textContent = student.name;
+                studentId.textContent = student.student_id;
+                studentEmail.textContent = student.email || 'Not provided';
+
+                // Show student info and marks form
+                studentInfo.classList.remove('hidden');
+                marksForm.classList.remove('hidden');
+
+                // Load student marks
+                loadStudentMarks(currentStudentId);
+            } else {
+                // Hide sections if no student selected
+                studentInfo.classList.add('hidden');
+                marksForm.classList.add('hidden');
+                marksHistory.classList.add('hidden');
+            }
+        };
+
+        // Get current teacher's subject
+        const getTeacherSubject = async () => {
+            teacherSubject.textContent = "Loading...";
+
+            try {
+                // Here you would make an API call to get teacher's info
+                // For now, we'll simulate it
+                setTimeout(() => {
+                    // This would come from API
+                    subjectInfo = {
+                        subject_id: 1,
+                        subject_name: "Mathematics"
+                    };
+                    teacherSubject.textContent = subjectInfo.subject_name;
+                }, 500);
+            } catch (error) {
+                console.error('Error loading teacher subject:', error);
+                teacherSubject.textContent = "Error loading subject";
+            }
+        };
+
+        // Load student marks
+        const loadStudentMarks = async (studentId) => {
+            try {
+                const response = await fetch(`/api/teacher/students/${studentId}/marks`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch marks');
+                }
+
+                const marks = await response.json();
+
+                // Show marks history if there are any marks
+                if (marks.length > 0) {
+                    marksHistory.classList.remove('hidden');
+                    marksTableBody.innerHTML = marks.map(mark => `
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-3 px-4 border-b">${mark.subject?.subject_name || 'Unknown'}</td>
+                            <td class="py-3 px-4 border-b">${mark.d1_oral}</td>
+                            <td class="py-3 px-4 border-b">${mark.d2_practical}</td>
+                            <td class="py-3 px-4 border-b">${mark.d3_theory}</td>
+                            <td class="py-3 px-4 border-b font-bold">${mark.total_marks}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    marksHistory.classList.add('hidden');
+                }
+
+                // Check if there are marks for teacher's subject
+                const subjectMarks = marks.find(mark =>
+                    subjectInfo && mark.subject && mark.subject.subject_id === subjectInfo.subject_id
+                );
+
+                // Pre-fill form if marks already exist
+                if (subjectMarks) {
+                    d1Oral.value = subjectMarks.d1_oral;
+                    d2Practical.value = subjectMarks.d2_practical;
+                    d3Theory.value = subjectMarks.d3_theory;
+                    calculateTotal();
+                } else {
+                    // Reset form if no marks exist
+                    assignMarksForm.reset();
+                    totalMarks.textContent = '0.0';
+                }
+            } catch (error) {
+                console.error('Error loading student marks:', error);
+                marksHistory.classList.add('hidden');
+                showAlert('Error loading student marks. Please try again.', 'error');
+            }
+        };
+
+        // Calculate total marks
+        const calculateTotal = () => {
+            const d1 = parseFloat(d1Oral.value) || 0;
+            const d2 = parseFloat(d2Practical.value) || 0;
+            const d3 = parseFloat(d3Theory.value) || 0;
+            const total = d1 + d2 + d3;
+            totalMarks.textContent = total.toFixed(1);
+        };
+
+        // Show alert message
+        const showAlert = (message, type = 'success') => {
+            const alertClass = type === 'success' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-red-100 text-red-800 border-red-300';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+
+            alertContainer.innerHTML = `
+                <div class="p-4 rounded-lg border ${alertClass} flex items-center">
+                    <i class="fa-solid ${icon} mr-3"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        };
+
+        // Increment/decrement mark values
+        const updateMarkValue = (inputId, increment) => {
+            const input = document.getElementById(inputId);
+            let value = parseFloat(input.value) || 0;
+
+            if (increment) {
+                value = Math.min(100, value + 1);
+            } else {
+                value = Math.max(0, value - 1);
+            }
+
+            input.value = value;
+            calculateTotal();
+        };
+
+        // Event listeners
+        studentSelect.addEventListener('change', () => {
+            selectStudent(studentSelect.value);
+        });
+
+        // Search functionality
+        studentSearch.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchStudents(e.target.value);
+            }, 300); // Debounce search
+        });
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchResults.contains(e.target) && e.target !== studentSearch) {
+                searchResults.classList.add('hidden');
+            }
+        });
+
+        // Calculate total when marks change
+        d1Oral.addEventListener('input', calculateTotal);
+        d2Practical.addEventListener('input', calculateTotal);
+        d3Theory.addEventListener('input', calculateTotal);
+
+        // Mark increment/decrement buttons
+        document.querySelectorAll('.mark-increment').forEach(button => {
+            button.addEventListener('click', () => {
+                updateMarkValue(button.dataset.input, true);
+            });
+        });
+
+        document.querySelectorAll('.mark-decrement').forEach(button => {
+            button.addEventListener('click', () => {
+                updateMarkValue(button.dataset.input, false);
+            });
+        });
+
+        // Quick mark buttons
+        document.querySelectorAll('.quick-mark').forEach(button => {
+            button.addEventListener('click', () => {
+                const value = button.dataset.value;
+                const activeElement = document.activeElement;
+
+                // If an input is focused, set the value there
+                if (activeElement && (activeElement === d1Oral || activeElement === d2Practical || activeElement === d3Theory)) {
+                    activeElement.value = value;
+                } else {
+                    // Otherwise set all inputs to the same value
+                    d1Oral.value = value;
+                    d2Practical.value = value;
+                    d3Theory.value = value;
+                }
+
+                calculateTotal();
+            });
+        });
+
+        // Clear marks button
+        clearMarksBtn.addEventListener('click', () => {
+            assignMarksForm.reset();
+            totalMarks.textContent = '0.0';
+        });
+
+        // Form submission
+        assignMarksForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!currentStudentId || !subjectInfo) {
+                showAlert('Missing student or subject information.', 'error');
+                return;
+            }
+
+            const formData = {
+                d1_oral: parseFloat(d1Oral.value) || 0,
+                d2_practical: parseFloat(d2Practical.value) || 0,
+                d3_theory: parseFloat(d3Theory.value) || 0
+            };
+
+            try {
+                const response = await fetch(`/api/teacher/students/${currentStudentId}/marks`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                    credentials: 'same-origin'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('Marks saved successfully!');
+                    loadStudentMarks(currentStudentId); // Refresh marks display
+                } else {
+                    throw new Error(data.error || 'Failed to save marks');
+                }
+            } catch (error) {
+                console.error('Error saving marks:', error);
+                showAlert(error.message || 'Error saving marks. Please try again.', 'error');
+            }
+        });
+
+        // Initialize the page
+        loadStudents();
+        getTeacherSubject();
+
+        // Initialize form input validation
+        const markInputs = [d1Oral, d2Practical, d3Theory];
+        markInputs.forEach(input => {
+            input.addEventListener('blur', () => {
+                const value = parseFloat(input.value);
+                if (value < 0) input.value = "0";
+                if (value > 100) input.value = "100";
+                calculateTotal();
+            });
+        });
+    });
+</script>
+{% endblock %}
