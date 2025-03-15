@@ -321,16 +321,23 @@
             teacherSubject.textContent = "Loading...";
 
             try {
-                // Here you would make an API call to get teacher's info
-                // For now, we'll simulate it
-                setTimeout(() => {
-                    // This would come from API
-                    subjectInfo = {
-                        subject_id: 1,
-                        subject_name: "Mathematics"
-                    };
-                    teacherSubject.textContent = subjectInfo.subject_name;
-                }, 500);
+                // Make the actual API call to get teacher's info
+                const response = await fetch('/api/teacher/details');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const teacherData = await response.json();
+
+                // Extract the subject information from the response
+                const subjectInfo = teacherData.subject;
+
+                // Update the UI with the subject name
+                teacherSubject.textContent = subjectInfo.subject_name;
+
+                // If you need to use the subject ID elsewhere in your code
+                return subjectInfo;
             } catch (error) {
                 console.error('Error loading teacher subject:', error);
                 teacherSubject.textContent = "Error loading subject";

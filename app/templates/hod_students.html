@@ -3,7 +3,7 @@
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 font-weight-bold text-primary">Students</h6>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#studentModal" onclick="openAddStudentModal()">
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#studentModal" onclick="resetStudentForm()">
             <i class="fas fa-plus"></i> Add Student
         </button>
     </div>
@@ -37,23 +37,27 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="studentForm">
+                <form id="studentForm" novalidate>
                     <input type="hidden" id="studentId"> <!-- Stores ID for editing -->
                     <div class="mb-3">
                         <label for="studentName" class="form-label">Name</label>
                         <input type="text" class="form-control" id="studentName" required>
+                        <div class="invalid-feedback">Please enter a valid name</div>
                     </div>
                     <div class="mb-3">
                         <label for="studentEmail" class="form-label">Email</label>
                         <input type="email" class="form-control" id="studentEmail" required>
+                        <div class="invalid-feedback">Please enter a valid email address</div>
                     </div>
                     <div class="mb-3">
                         <label for="studentPhone" class="form-label">Phone</label>
-                        <input type="tel" class="form-control" id="studentPhone" required>
+                        <input type="tel" class="form-control" id="studentPhone" required pattern="[0-9]{10}">
+                        <div class="invalid-feedback">Please enter a valid 10-digit phone number</div>
                     </div>
                     <div class="mb-3">
                         <label for="studentDob" class="form-label">Date of Birth</label>
                         <input type="date" class="form-control" id="studentDob" required>
+                        <div class="invalid-feedback">Please enter a valid date of birth</div>
                     </div>
                     <div class="mb-3">
                         <label for="studentGender" class="form-label">Gender</label>
@@ -62,14 +66,17 @@
                             <option value="Female">Female</option>
                             <option value="Other">Other</option>
                         </select>
+                        <div class="invalid-feedback">Please select a gender</div>
                     </div>
                     <div class="mb-3">
                         <label for="studentAddress" class="form-label">Address</label>
                         <textarea class="form-control" id="studentAddress" rows="2" required></textarea>
+                        <div class="invalid-feedback">Please enter a valid address</div>
                     </div>
                     <div class="mb-3">
                         <label for="studentAdmissionYear" class="form-label">Admission Year</label>
-                        <input type="number" class="form-control" id="studentAdmissionYear" required>
+                        <input type="number" class="form-control" id="studentAdmissionYear" required min="2000" max="2030">
+                        <div class="invalid-feedback">Please enter a valid admission year (2000-2030)</div>
                     </div>
                 </form>
             </div>
@@ -121,8 +128,85 @@
         loadStudents();
 
         // Save student
-        document.getElementById('saveStudent').addEventListener('click', addStudent);
+        document.getElementById('saveStudent').addEventListener('click', function() {
+            if (validateStudentForm()) {
+                const studentId = document.getElementById('studentId').value;
+                if (studentId) {
+                    updateStudent(studentId);
+                } else {
+                    addStudent();
+                }
+            }
+        });
     });
+
+    // Function to reset the student form when adding a new student
+    function resetStudentForm() {
+        // Reset form fields
+        document.getElementById('studentForm').reset();
+        document.getElementById('studentId').value = '';
+
+        // Reset form validation states
+        const form = document.getElementById('studentForm');
+        const inputs = form.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.classList.remove('is-invalid');
+        });
+
+        // Change modal title and button text
+        document.getElementById('studentModalLabel').textContent = 'Add New Student';
+        document.getElementById('saveStudent').textContent = 'Save';
+    }
+
+    // Function for form validation
+    function validateStudentForm() {
+        const form = document.getElementById('studentForm');
+        const inputs = form.querySelectorAll('input, select, textarea');
+        let isValid = true;
+
+        inputs.forEach(input => {
+            if (input.id === 'studentId') return; // Skip hidden field
+
+            // Reset validation state
+            input.classList.remove('is-invalid');
+
+            // Check required fields
+            if (input.hasAttribute('required') && !input.value.trim()) {
+                input.classList.add('is-invalid');
+                isValid = false;
+                return;
+            }
+
+            // Validate email
+            if (input.id === 'studentEmail') {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(input.value)) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                }
+            }
+
+            // Validate phone (10 digits)
+            if (input.id === 'studentPhone') {
+                const phoneRegex = /^\d{10}$/;
+                if (!phoneRegex.test(input.value)) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                }
+            }
+
+            // Validate admission year
+            if (input.id === 'studentAdmissionYear') {
+                const year = parseInt(input.value);
+                if (isNaN(year) || year < 2000 || year > 2030) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                }
+            }
+        });
+
+        return isValid;
+    }
 
     async function loadStudents() {
         try {
@@ -155,6 +239,7 @@
             });
         } catch (error) {
             console.error('Error loading students:', error);
+            showAlert('error', 'Failed to load students');
         }
     }
 
@@ -182,17 +267,18 @@
 
             if (result.success) {
                 // Close modal & reset form
-                bootstrap.Modal.getInstance(document.getElementById('addStudentModal')).hide();
-                document.getElementById('addStudentForm').reset();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('studentModal'));
+                modal.hide();
 
                 // Reload students list
                 loadStudents();
+                showAlert('success', 'Student added successfully');
             } else {
-                alert('Failed to add student: ' + (result.error || 'Unknown error'));
+                showAlert('error', 'Failed to add student: ' + (result.error || 'Unknown error'));
             }
         } catch (error) {
             console.error('Error adding student:', error);
-            alert('An error occurred while adding the student');
+            showAlert('error', 'An error occurred while adding the student');
         }
     }
 
@@ -229,7 +315,7 @@
             marksModal.show();
         } catch (error) {
             console.error('Error loading student marks:', error);
-            alert('An error occurred while loading student marks');
+            showAlert('error', 'An error occurred while loading student marks');
         }
     }
 
@@ -243,7 +329,15 @@
 
             const student = await response.json();
 
+            // Reset any previous validation states
+            const form = document.getElementById('studentForm');
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.classList.remove('is-invalid');
+            });
+
             // Fill the form with student data
+            document.getElementById('studentId').value = studentId;
             document.getElementById('studentName').value = student.name || '';
             document.getElementById('studentEmail').value = student.email || '';
             document.getElementById('studentPhone').value = student.phone || '';
@@ -252,26 +346,16 @@
             document.getElementById('studentAddress').value = student.address || '';
             document.getElementById('studentAdmissionYear').value = student.admission_year || '';
 
-            // Change modal title and save button functionality
-            document.getElementById('studentModalLabel').textContent = 'Edit Student'; // Changed from addStudentModalLabel
-            const saveButton = document.getElementById('saveStudent');
-
-            // Remove previous event listener if any
-            const oldSaveButton = saveButton.cloneNode(true);
-            saveButton.parentNode.replaceChild(oldSaveButton, saveButton);
-
-            // Add new event listener for update
-            oldSaveButton.textContent = 'Update';
-            oldSaveButton.addEventListener('click', function() {
-                updateStudent(studentId);
-            });
+            // Change modal title and save button text
+            document.getElementById('studentModalLabel').textContent = 'Edit Student';
+            document.getElementById('saveStudent').textContent = 'Update';
 
             // Show the modal
-            const studentModal = new bootstrap.Modal(document.getElementById('studentModal')); // Changed from addStudentModal
+            const studentModal = new bootstrap.Modal(document.getElementById('studentModal'));
             studentModal.show();
         } catch (error) {
             console.error('Error fetching student details:', error);
-            alert('An error occurred while loading student details: ' + error.message);
+            showAlert('error', 'An error occurred while loading student details: ' + error.message);
         }
     }
 
@@ -298,30 +382,22 @@
             const result = await response.json();
 
             if (result.success) {
-                // Close modal & reset form
-                bootstrap.Modal.getInstance(document.getElementById('studentModal')).hide(); // Changed from addStudentModal
-                document.getElementById('studentForm').reset(); // Changed from addStudentForm
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('studentModal'));
+                modal.hide();
 
-                // Reset modal for future use as "Add Student"
-                document.getElementById('studentModalLabel').textContent = 'Add New Student'; // Changed from addStudentModalLabel
-
-                // Reset button to original state
-                const saveButton = document.getElementById('saveStudent');
-                const oldSaveButton = saveButton.cloneNode(true);
-                saveButton.parentNode.replaceChild(oldSaveButton, saveButton);
-
-                // Add original event listener back
-                oldSaveButton.textContent = 'Save';
-                oldSaveButton.addEventListener('click', addStudent);
+                // Reset form for future use
+                resetStudentForm();
 
                 // Reload students list
                 loadStudents();
+                showAlert('success', 'Student updated successfully');
             } else {
-                alert('Failed to update student: ' + (result.error || 'Unknown error'));
+                showAlert('error', 'Failed to update student: ' + (result.error || 'Unknown error'));
             }
         } catch (error) {
             console.error('Error updating student:', error);
-            alert('An error occurred while updating the student');
+            showAlert('error', 'An error occurred while updating the student');
         }
     }
 
@@ -337,14 +413,41 @@
                 if (result.success) {
                     // Reload students list
                     loadStudents();
+                    showAlert('success', 'Student deleted successfully');
                 } else {
-                    alert('Failed to delete student: ' + (result.error || 'Unknown error'));
+                    showAlert('error', 'Failed to delete student: ' + (result.error || 'Unknown error'));
                 }
             } catch (error) {
                 console.error('Error deleting student:', error);
-                alert('An error occurred while deleting the student');
+                showAlert('error', 'An error occurred while deleting the student');
             }
         }
+    }
+
+    // Function to show alerts/notifications
+    function showAlert(type, message) {
+        // Create alert element
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+
+        // Insert at the top of the card
+        const cardBody = document.querySelector('.card-body');
+        cardBody.insertBefore(alertDiv, cardBody.firstChild);
+
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            const bsAlert = bootstrap.Alert.getInstance(alertDiv);
+            if (bsAlert) {
+                bsAlert.close();
+            } else {
+                alertDiv.remove();
+            }
+        }, 5000);
     }
 </script>
 {% endblock %}

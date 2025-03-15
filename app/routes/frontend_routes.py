@@ -83,3 +83,9 @@ def logout_hod():
 
     response = render_template("logout_hod.html")  # Load logout page
     return response
+
+
+@frontend_blueprint.route("/dashboard/teacher/view/subjects")
+@teacher_login_required
+def teacher_dashboard_view_subjects():
+    return render_template("teacher_subjects.html")

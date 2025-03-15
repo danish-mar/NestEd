@@ -1,0 +1,163 @@
+{% extends "base_teacher.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">My Teaching Subject</h1>
+    </div>
+
+    <!-- Subject Card -->
+    <div class="row">
+        <div class="col-xl-12 col-md-12 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Subject Details</h6>
+                </div>
+                <div class="card-body" id="subjectDetails">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setPageInfo('My Subjects', 'Teaching');
+        loadTeacherDetails();
+    });
+
+    async function loadTeacherDetails() {
+        try {
+            const response = await fetch('/api/teacher/details');
+            const teacherData = await response.json();
+
+            displaySubjectDetails(teacherData);
+
+        } catch (error) {
+            console.error('Error loading teacher details:', error);
+            showAlert('error', 'Failed to load teacher details');
+        }
+    }
+
+    function displaySubjectDetails(teacherData) {
+        const subjectDetailsContainer = document.getElementById('subjectDetails');
+
+        // Create subject info card
+        const subjectInfo = `
+            <div class="row no-gutters align-items-center">
+                <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                        Subject
+                    </div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        ${teacherData.subject.subject_name}
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <i class="fas fa-book fa-2x text-gray-300"></i>
+                </div>
+            </div>
+            <hr>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                        Teacher ID
+                    </div>
+                    <div class="h6 mb-3 font-weight-bold text-gray-800">
+                        ${teacherData.teacher_id}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                        Subject ID
+                    </div>
+                    <div class="h6 mb-3 font-weight-bold text-gray-800">
+                        ${teacherData.subject.subject_id}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                        Teacher Name
+                    </div>
+                    <div class="h6 mb-3 font-weight-bold text-gray-800">
+                        ${teacherData.name}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                        Contact
+                    </div>
+                    <div class="h6 mb-3 font-weight-bold text-gray-800">
+                        <i class="fas fa-envelope fa-sm mr-1"></i> ${teacherData.email}<br>
+                        <i class="fas fa-phone fa-sm mr-1"></i> ${teacherData.phone}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        subjectDetailsContainer.innerHTML = subjectInfo;
+    }
+
+    async function loadEnrolledStudents(subjectId) {
+        try {
+            // Assuming there's an API endpoint that returns students enrolled in a subject
+            const response = await fetch(`/api/teacher/subjects/${subjectId}/students`);
+            const students = await response.json();
+
+            const studentsTableBody = document.getElementById('studentsList');
+
+            if (students.length === 0) {
+                studentsTableBody.innerHTML = '<tr><td colspan="4" class="text-center">No students enrolled in this subject</td></tr>';
+            } else {
+                studentsTableBody.innerHTML = '';
+                students.forEach(student => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${student.student_id}</td>
+                        <td>${student.name}</td>
+                        <td>${student.email}</td>
+                        <td>${student.admission_year}</td>
+                    `;
+                    studentsTableBody.appendChild(row);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading enrolled students:', error);
+            document.getElementById('studentsList').innerHTML =
+                '<tr><td colspan="4" class="text-center text-danger">Failed to load students. Please try again later.</td></tr>';
+        }
+    }
+
+    // Function to show alerts/notifications
+    function showAlert(type, message) {
+        // Create alert element
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+
+        // Insert at the top of the container
+        const container = document.querySelector('.container-fluid');
+        container.insertBefore(alertDiv, container.firstChild);
+
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            const bsAlert = bootstrap.Alert.getInstance(alertDiv);
+            if (bsAlert) {
+                bsAlert.close();
+            } else {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+</script>
+{% endblock %}

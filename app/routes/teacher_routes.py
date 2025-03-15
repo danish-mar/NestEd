@@ -98,3 +98,17 @@ def download_single_student_report(student_id):
         return jsonify({"error": "Student not found or report generation failed"}), 404
 
     return send_file(file_path, as_attachment=True)
+
+
+# -------------------- Get Teacher Details --------------------
+@teacher_blueprint.route("/details", methods=["GET"])
+@login_required
+def get_teacher_details():
+    session_id = request.cookies.get("session_id")
+    teacher_id = SessionManager.get_user_id_from_session_id(session_id, role="teacher")
+    teacher = TeacherModule.get_teacher_by_id(teacher_id)
+
+    if teacher:
+        return jsonify(teacher.serialize())
+    else:
+        return jsonify({"error": "Teacher not found"}), 404
