@@ -4,9 +4,9 @@ from app.extensions import db
 
 class SubjectModule:
     @staticmethod
-    def create_subject(subject_name):
+    def create_subject(subject_name, year):
         """Creates a new subject"""
-        new_subject = Subject(subject_name=subject_name)
+        new_subject = Subject(subject_name=subject_name, year=year)
         db.session.add(new_subject)
         db.session.commit()
         return new_subject

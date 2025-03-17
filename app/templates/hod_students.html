@@ -17,6 +17,7 @@
                     <th>Email</th>
                     <th>Phone</th>
                     <th>Admission Year</th>
+                    <th>Current Year</th>
                     <th>Actions</th>
                 </tr>
                 </thead>
@@ -77,6 +78,11 @@
                         <label for="studentAdmissionYear" class="form-label">Admission Year</label>
                         <input type="number" class="form-control" id="studentAdmissionYear" required min="2000" max="2030">
                         <div class="invalid-feedback">Please enter a valid admission year (2000-2030)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="studentCurrentYear" class="form-label">Current Year</label>
+                        <input type="number" class="form-control" id="studentCurrentYear" required min="1" max="4">
+                        <div class="invalid-feedback">Please enter a valid current year (1-4)</div>
                     </div>
                 </form>
             </div>
@@ -203,6 +209,14 @@
                     isValid = false;
                 }
             }
+
+            if (input.id === 'studentCurrentYear') {
+                const year = parseInt(input.value);
+                if (isNaN(year) || year < 1 || year > 4) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                }
+            }
         });
 
         return isValid;
@@ -223,6 +237,7 @@
                 <td>${student.email}</td>
                 <td>${student.phone}</td>
                 <td>${student.admission_year}</td>
+                <td>${student.current_year}</td>
                 <td class="text-center">
                     <button class="btn btn-sm btn-info me-1" onclick="viewStudentMarks(${student.student_id}, '${student.name}')">
                         <i class="fas fa-chart-bar"></i>
@@ -251,8 +266,10 @@
             dob: document.getElementById('studentDob').value,
             gender: document.getElementById('studentGender').value,
             address: document.getElementById('studentAddress').value,
-            admission_year: parseInt(document.getElementById('studentAdmissionYear').value)
+            admission_year: parseInt(document.getElementById('studentAdmissionYear').value),
+            current_year: parseInt(document.getElementById('studentCurrentYear').value) // Add this field
         };
+
 
         try {
             const response = await fetch('/api/hod/students', {

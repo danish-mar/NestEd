@@ -40,6 +40,11 @@
                         <label for="subjectName" class="form-label">Subject Name</label>
                         <input type="text" class="form-control" id="subjectName" required>
                     </div>
+                    <div class="mb-3">
+                        <label for="subjectYear" class="form-label">Year</label>
+                        <input type="number" class="form-control" id="subjectYear" required min="1" max="4">
+                        <div class="invalid-feedback">Please enter a valid year (1-4)</div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -73,7 +78,7 @@
                     <td>${subject.subject_id}</td>
                     <td>${subject.subject_name}</td>
                     <td class="text-center">
-                        <button class="btn btn-sm btn-info me-1" onclick="editSubject(${subject.subject_id}, '${subject.subject_name}')">
+                            <button class="btn btn-sm btn-info me-1" onclick="editSubject(${subject.subject_id}, '${subject.subject_name}', ${subject.year})">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="btn btn-sm btn-danger" onclick="deleteSubject(${subject.subject_id})">
@@ -92,7 +97,10 @@
         const subjectId = document.getElementById('subjectId').value;
         const subjectName = document.getElementById('subjectName').value;
 
-        const subjectData = { subject_name: subjectName };
+        const subjectData = {
+            subject_name: subjectName,
+            year: parseInt(document.getElementById('subjectYear').value)
+        };
 
         try {
             let response;
@@ -135,9 +143,11 @@
         }
     }
 
-    function editSubject(subjectId, subjectName) {
+    function editSubject(subjectId, subjectName, subjectYear) {
         document.getElementById('subjectId').value = subjectId;
         document.getElementById('subjectName').value = subjectName;
+        document.getElementById('subjectYear').value = subjectYear;
+
         document.getElementById('subjectModalLabel').textContent = 'Edit Subject';
 
         // Create a variable for the modal

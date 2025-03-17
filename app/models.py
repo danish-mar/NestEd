@@ -23,7 +23,6 @@ class HOD(db.Model):
         """Verifies the entered password"""
         return bcrypt.check_password_hash(self.password_hash, password)
 
-
     def serialize(self):
         """Convert SQLAlchemy object to a dictionary"""
         return {
@@ -62,7 +61,7 @@ class Teacher(db.Model):
             "name": self.name,
             "email": self.email,
             "phone": self.phone,
-            "subject": self.subject.serialize() if self.subject else None  # Include subject details
+            "subject": self.subject.serialize() if self.subject else None
         }
 
 
@@ -72,12 +71,14 @@ class Subject(db.Model):
     __tablename__ = "subjects"
     subject_id = Column(Integer, primary_key=True)
     subject_name = Column(String(100), nullable=False)
+    year = Column(Integer, nullable=False)
 
     def serialize(self):
         """Convert SQLAlchemy object to a dictionary"""
         return {
             "subject_id": self.subject_id,
-            "subject_name": self.subject_name
+            "subject_name": self.subject_name,
+            "year": self.year
         }
 
 
@@ -92,6 +93,7 @@ class Student(db.Model):
     dob = Column(String(20), nullable=False)
     gender = Column(String(10), nullable=False)
     address = Column(String(255), nullable=False)
+    current_year = Column(Integer, nullable=False, default=1)
     admission_year = Column(Integer, nullable=False)
 
     def serialize(self):
@@ -104,37 +106,114 @@ class Student(db.Model):
             "dob": self.dob,
             "gender": self.gender,
             "address": self.address,
-            "admission_year": self.admission_year
+            "admission_year": self.admission_year,
+            "current_year": self.current_year
         }
 
 
-# ---------------------------- MODULE 5: MARKS SYSTEM ----------------------------
-class Marks(db.Model):
-    """Stores marks for students in subjects assigned to teachers"""
-    __tablename__ = "marks"
-    marks_id = Column(Integer, primary_key=True)
+# ---------------------------- MODULE 5: MANUAL MARKS (EXPERIMENTS) ----------------------------
+class ManualMarks(db.Model):
+    """Stores experiment marks for students dynamically"""
+    __tablename__ = "manual_marks"
+    manual_marks_id = Column(Integer, primary_key=True)
     student_id = Column(Integer, ForeignKey("students.student_id"), nullable=False)
     subject_id = Column(Integer, ForeignKey("subjects.subject_id"), nullable=False)
-    d1_oral = Column(Float, nullable=False, default=0)  # D1 - Oral Marks
-    d2_practical = Column(Float, nullable=False, default=0)  # D2 - Practical Marks
-    d3_theory = Column(Float, nullable=False, default=0)  # D3 - Theory Marks
-    total_marks = Column(Float, nullable=False, default=0)  # Auto-calculated total
+    experiment_number = Column(Integer, nullable=False)  # E1-E32 as numbers (1-32)
+    marks_obtained = Column(Float, default=0)
 
     student = relationship("Student")
     subject = relationship("Subject")
 
-    def calculate_total(self):
-        """Calculates total marks"""
-        self.total_marks = self.d1_oral + self.d2_practical + self.d3_theory
+    @staticmethod
+    def calculate_total(student_id, subject_id):
+        """Calculate total experiment marks for a student in a subject"""
+        experiments = db.session.query(ManualMarks).filter_by(student_id=student_id, subject_id=subject_id).all()
+        total_exp_marks = sum(exp.marks_obtained for exp in experiments)
+        return total_exp_marks
 
     def serialize(self):
-        """Convert SQLAlchemy object to a dictionary"""
+        """Convert to dictionary"""
         return {
-            "marks_id": self.marks_id,
-            "student": self.student.serialize() if self.student else None,  # Include student details
-            "subject": self.subject.serialize() if self.subject else None,  # Include subject details
-            "d1_oral": self.d1_oral,
-            "d2_practical": self.d2_practical,
-            "d3_theory": self.d3_theory,
-            "total_marks": self.total_marks
+            "manual_marks_id": self.manual_marks_id,
+            "student_id": self.student_id,
+            "subject_id": self.subject_id,
+            "experiment_number": self.experiment_number,
+            "marks_obtained": self.marks_obtained
+        }
+
+
+# ---------------------------- MODULE 6: PRACTICAL EXAM MARKS ----------------------------
+class PracticalMarks(db.Model):
+    """Stores practical exam marks for students"""
+    __tablename__ = "practical_marks"
+    practical_marks_id = Column(Integer, primary_key=True)
+    student_id = Column(Integer, ForeignKey("students.student_id"), nullable=False)
+    subject_id = Column(Integer, ForeignKey("subjects.subject_id"), nullable=False)
+    practical_exam_marks = Column(Float, nullable=False, default=0)
+
+    student = relationship("Student")
+    subject = relationship("Subject")
+
+    def serialize(self):
+        """Convert to dictionary"""
+        return {
+            "practical_marks_id": self.practical_marks_id,
+            "student": self.student.serialize(),
+            "subject": self.subject.serialize(),
+            "practical_exam_marks": self.practical_exam_marks
+        }
+
+
+# ---------------------------- MODULE 7: CLASS TEST MARKS ----------------------------
+class ClassTestMarks(db.Model):
+    """Stores marks for Class Test 1 and Class Test 2"""
+    __tablename__ = "class_test_marks"
+    class_test_marks_id = Column(Integer, primary_key=True)
+    student_id = Column(Integer, ForeignKey("students.student_id"), nullable=False)
+    subject_id = Column(Integer, ForeignKey("subjects.subject_id"), nullable=False)
+    class_test_1 = Column(Float, default=0)
+    class_test_2 = Column(Float, default=0)
+
+    student = relationship("Student")
+    subject = relationship("Subject")
+
+    def calculate_average(self):
+        """Calculate average of class test 1 & 2"""
+        return (self.class_test_1 + self.class_test_2) / 2
+
+    def serialize(self):
+        """Convert to dictionary"""
+        return {
+            "class_test_marks_id": self.class_test_marks_id,
+            "student": self.student.serialize(),
+            "subject": self.subject.serialize(),
+            "class_test_1": self.class_test_1,
+            "class_test_2": self.class_test_2,
+            "average_marks": self.calculate_average()
+        }
+
+
+# ---------------------------- MODULE 8: SLA ACTIVITY MARKS ----------------------------
+class SLAMarks(db.Model):
+    """Stores SLA marks (Micro Projects, Assignments, Others)"""
+    __tablename__ = "sla_marks"
+    sla_marks_id = Column(Integer, primary_key=True)
+    student_id = Column(Integer, ForeignKey("students.student_id"), nullable=False)
+    subject_id = Column(Integer, ForeignKey("subjects.subject_id"), nullable=False)
+    micro_project = Column(Float, default=0)
+    assignment = Column(Float, default=0)
+    other_marks = Column(Float, default=0)
+
+    student = relationship("Student")
+    subject = relationship("Subject")
+
+    def serialize(self):
+        """Convert to dictionary"""
+        return {
+            "sla_marks_id": self.sla_marks_id,
+            "student": self.student.serialize(),
+            "subject": self.subject.serialize(),
+            "micro_project": self.micro_project,
+            "assignment": self.assignment,
+            "other_marks": self.other_marks
         }
