@@ -95,6 +95,8 @@ class Student(db.Model):
     address = Column(String(255), nullable=False)
     current_year = Column(Integer, nullable=False, default=1)
     admission_year = Column(Integer, nullable=False)
+    enrollment_number = Column(String(20), unique=True)  # Unique enrollment number
+    exam_seat_number = Column(String(20), unique=True)  # Unique exam seat number
 
     def serialize(self):
         """Convert SQLAlchemy object to a dictionary"""
@@ -107,7 +109,9 @@ class Student(db.Model):
             "gender": self.gender,
             "address": self.address,
             "admission_year": self.admission_year,
-            "current_year": self.current_year
+            "current_year": self.current_year,
+            "enrollment_number": self.enrollment_number,
+            "exam_seat_number": self.exam_seat_number
         }
 
 

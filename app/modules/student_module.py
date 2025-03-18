@@ -4,10 +4,10 @@ from app.extensions import db
 
 class StudentModule:
     @staticmethod
-    def create_student(name, email, phone, dob, gender, address, admission_year, current_year): #add current year
+    def create_student(name, email, phone, dob, gender, address, admission_year, current_year, enrollment_no, exam_seat_no): #add current year
         """Creates a new student"""
         new_student = Student(name=name, email=email, phone=phone, dob=dob, gender=gender,
-                              address=address, admission_year=admission_year, current_year=current_year) #add current year
+                              address=address, admission_year=admission_year, current_year=current_year, enrollment_number=enrollment_no, exam_seat_number=exam_seat_no) #add current year
         db.session.add(new_student)
         db.session.commit()
         return new_student

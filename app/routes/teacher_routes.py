@@ -3,7 +3,7 @@ import os
 from flask import Blueprint, request, jsonify, send_file
 
 from app.models import Subject, Student
-# from app.modules.reporting_module import ReportingModule
+from app.modules.reporting_module import ReportingModule
 from app.modules.session_manager import SessionManager
 from app.modules.teacher_module import TeacherModule
 from app.modules.student_module import StudentModule
@@ -170,6 +170,8 @@ def assign_class_test_marks(student_id):
     if not subject_id:
         return jsonify({"error": "Unauthorized or subject not found"}), 403
 
+    print(data)
+
     new_marks, error = MarksModule.assign_class_test_marks(student_id, subject_id, data["class_test_1"],
                                                            data["class_test_2"])
     if error:
@@ -245,36 +247,36 @@ def delete_sla_marks(sla_marks_id):
 
 
 #
-# @teacher_blueprint.route("/report/students", methods=["GET"])
-# @login_required
-# def download_student_report():
-#     """Download all students' details and marks report"""
-#     file_format = request.args.get("format", "excel")  # Default to Excel
-#     if file_format not in ["excel", "pdf"]:
-#         return jsonify({"error": "Invalid format. Use 'excel' or 'pdf'."}), 400
-#
-#     file_path = ReportingModule.generate_student_report(file_format)
-#
-#     if not file_path or not os.path.exists(file_path):
-#         return jsonify({"error": "Report generation failed"}), 500
-#
-#     return send_file(file_path, as_attachment=True)
-#
-#
-# @teacher_blueprint.route("/report/student/<int:student_id>", methods=["GET"])
-# @login_required
-# def download_single_student_report(student_id):
-#     """Download report for a single student with all their marks"""
-#     file_format = request.args.get("format", "excel")  # Default to Excel
-#     if file_format not in ["excel", "pdf"]:
-#         return jsonify({"error": "Invalid format. Use 'excel' or 'pdf'."}), 400
-#
-#     file_path = ReportingModule.generate_single_student_report(student_id, file_format)
-#
-#     if not file_path or not os.path.exists(file_path):
-#         return jsonify({"error": "Student not found or report generation failed"}), 404
-#
-#     return send_file(file_path, as_attachment=True)
+@teacher_blueprint.route("/report/students", methods=["GET"])
+@login_required
+def download_student_report():
+    """Download all students' details and marks report"""
+    file_format = request.args.get("format", "excel")  # Default to Excel
+    if file_format not in ["excel", "pdf"]:
+        return jsonify({"error": "Invalid format. Use 'excel' or 'pdf'."}), 400
+
+    file_path = ReportingModule.generate_student_report(file_format)
+
+    if not file_path or not os.path.exists(file_path):
+        return jsonify({"error": "Report generation failed"}), 500
+
+    return send_file(file_path, as_attachment=True)
+
+
+@teacher_blueprint.route("/report/student/<int:student_id>", methods=["GET"])
+@login_required
+def download_single_student_report(student_id):
+    """Download report for a single student with all their marks"""
+    file_format = request.args.get("format", "excel")  # Default to Excel
+    if file_format not in ["excel", "pdf"]:
+        return jsonify({"error": "Invalid format. Use 'excel' or 'pdf'."}), 400
+
+    file_path = ReportingModule.generate_single_student_report(student_id, file_format)
+
+    if not file_path or not os.path.exists(file_path):
+        return jsonify({"error": "Student not found or report generation failed"}), 404
+
+    return send_file(file_path, as_attachment=True)
 
 
 # -------------------- Get Teacher Details --------------------

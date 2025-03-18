@@ -12,9 +12,9 @@
             <table class="table table-bordered" id="studentsTable" width="100%" cellspacing="0">
                 <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>Enrollment Number</th>
+                    <th>Exam Seat No</th>
                     <th>Name</th>
-                    <th>Email</th>
                     <th>Phone</th>
                     <th>Admission Year</th>
                     <th>Current Year</th>
@@ -83,6 +83,16 @@
                         <label for="studentCurrentYear" class="form-label">Current Year</label>
                         <input type="number" class="form-control" id="studentCurrentYear" required min="1" max="4">
                         <div class="invalid-feedback">Please enter a valid current year (1-4)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="studentEnrollmentNumber" class="form-label">Enrollment Number</label>
+                        <input type="text" class="form-control" id="studentEnrollmentNumber" required>
+                        <div class="invalid-feedback">Please enter a valid enrollment number</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="studentExamSeatNo" class="form-label">Exam Seat Number</label>
+                        <input type="text" class="form-control" id="studentExamSeatNo" required>
+                        <div class="invalid-feedback">Please enter a valid exam seat number</div>
                     </div>
                 </form>
             </div>
@@ -217,6 +227,20 @@
                     isValid = false;
                 }
             }
+            if (input.id === 'studentEnrollmentNumber') {
+                const enrollmentNumberRegex = /^[a-zA-Z0-9]+$/;
+                if (!enrollmentNumberRegex.test(input.value)) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                }
+            }
+            if (input.id === 'studentExamSeatNo') {
+                const examSeatNoRegex = /^[a-zA-Z0-9]+$/;
+                if (!examSeatNoRegex.test(input.value)) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                }
+            }
         });
 
         return isValid;
@@ -232,12 +256,13 @@
             students.forEach(student => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                <td>${student.student_id}</td>
+                <td>${student.enrollment_number}</td>
+                <td>${student.exam_seat_number}</td>
                 <td>${student.name}</td>
-                <td>${student.email}</td>
                 <td>${student.phone}</td>
                 <td>${student.admission_year}</td>
                 <td>${student.current_year}</td>
+
                 <td class="text-center">
                     <button class="btn btn-sm btn-info me-1" onclick="viewStudentMarks(${student.student_id}, '${student.name}')">
                         <i class="fas fa-chart-bar"></i>
@@ -267,7 +292,9 @@
             gender: document.getElementById('studentGender').value,
             address: document.getElementById('studentAddress').value,
             admission_year: parseInt(document.getElementById('studentAdmissionYear').value),
-            current_year: parseInt(document.getElementById('studentCurrentYear').value) // Add this field
+            current_year: parseInt(document.getElementById('studentCurrentYear').value), // Add this field
+            enrollment_number: document.getElementById('studentEnrollmentNumber').value,
+            exam_seat_number: document.getElementById('studentExamSeatNo').value
         };
 
 
@@ -362,6 +389,10 @@
             document.getElementById('studentGender').value = student.gender || 'Male';
             document.getElementById('studentAddress').value = student.address || '';
             document.getElementById('studentAdmissionYear').value = student.admission_year || '';
+            document.getElementById('studentCurrentYear').value = student.current_year || '';
+            document.getElementById('studentEnrollmentNumber').value = student.enrollment_number || '';
+            document.getElementById('studentExamSeatNo').value = student.exam_seat_number || '';
+
 
             // Change modal title and save button text
             document.getElementById('studentModalLabel').textContent = 'Edit Student';
@@ -384,7 +415,10 @@
             dob: document.getElementById('studentDob').value,
             gender: document.getElementById('studentGender').value,
             address: document.getElementById('studentAddress').value,
-            admission_year: parseInt(document.getElementById('studentAdmissionYear').value)
+            admission_year: parseInt(document.getElementById('studentAdmissionYear').value),
+            current_year: parseInt(document.getElementById('studentCurrentYear').value),
+            enrollment_number: document.getElementById('studentEnrollmentNumber').value,
+            exam_seat_number: document.getElementById('studentExamSeatNo').value
         };
 
         try {

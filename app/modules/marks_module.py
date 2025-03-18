@@ -109,16 +109,31 @@ class MarksModule:
     # -------------------- Class Test Marks --------------------
     @staticmethod
     def assign_class_test_marks(student_id, subject_id, class_test_1, class_test_2):
-        """Assign marks for Class Test 1 & 2 with year verification."""
+        """Assign or update marks for Class Test 1 & 2 with year verification."""
         is_valid, error_message = MarksModule._verify_year(student_id, subject_id)
         if not is_valid:
             return None, error_message
 
-        new_marks = ClassTestMarks(student_id=student_id, subject_id=subject_id,
-                                   class_test_1=class_test_1, class_test_2=class_test_2)
-        db.session.add(new_marks)
+        # Check if the student already has class test marks
+        existing_marks = ClassTestMarks.query.filter_by(student_id=student_id, subject_id=subject_id).first()
+
+        if existing_marks:
+            # ✅ Update existing record
+            existing_marks.class_test_1 = class_test_1
+            existing_marks.class_test_2 = class_test_2
+        else:
+            # ✅ Insert new record if it doesn't exist
+            existing_marks = ClassTestMarks(
+                student_id=student_id,
+                subject_id=subject_id,
+                class_test_1=class_test_1,
+                class_test_2=class_test_2
+            )
+            db.session.add(existing_marks)
+
         db.session.commit()
-        return new_marks, None
+        return existing_marks, None
+
 
     @staticmethod
     def get_class_test_marks(student_id, subject_id):
