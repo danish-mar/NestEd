@@ -250,12 +250,26 @@ def delete_sla_marks(sla_marks_id):
 @teacher_blueprint.route("/report/students", methods=["GET"])
 @login_required
 def download_student_report():
-    """Download all students' details and marks report"""
+    """Download all students' details and marks report for the teacher's subject year"""
     file_format = request.args.get("format", "excel")  # Default to Excel
     if file_format not in ["excel", "pdf"]:
         return jsonify({"error": "Invalid format. Use 'excel' or 'pdf'."}), 400
 
-    file_path = ReportingModule.generate_student_report(file_format)
+    # Get the subject ID assigned to the teacher
+    subject_id = get_teacher_subject_id(request)
+    if not subject_id:
+        return jsonify({"error": "Unauthorized or subject not found"}), 403
+
+    # Fetch the subject to get the associated year
+    subject = Subject.query.get(subject_id)
+    if not subject:
+        return jsonify({"error": "Subject not found"}), 404
+
+    # Use the year from the teacher's subject
+    year = subject.year
+
+    # Generate the report for students in that year
+    file_path = ReportingModule.generate_student_report(file_format=file_format, year=year)
 
     if not file_path or not os.path.exists(file_path):
         return jsonify({"error": "Report generation failed"}), 500

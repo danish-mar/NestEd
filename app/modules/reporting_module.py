@@ -27,11 +27,14 @@ class ReportingModule:
     }
 
     @staticmethod
-    def generate_student_report(file_format="excel"):
-        """Generate a comprehensive report for all students and their marks."""
+    def generate_student_report(file_format="excel", year=None):
+        """Generate a comprehensive report for all students of a specific year and their marks."""
         from app.models import Student, Subject, ManualMarks, PracticalMarks, ClassTestMarks, SLAMarks
 
-        students = Student.query.all()
+        if year is None:
+            students = Student.query.all()  # Fallback to all students if no year is specified
+        else:
+            students = Student.query.filter_by(current_year=year).all()
 
         if file_format == "excel":
             return ReportingModule._generate_excel_report(students)
